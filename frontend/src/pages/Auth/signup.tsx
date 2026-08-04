@@ -46,7 +46,7 @@ export default function Signup() {
   } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      name: "",
+      username: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -64,12 +64,17 @@ export default function Signup() {
   const onSubmit = async (values: SignupFormValues) => {
     setFormError(null);
     try {
-      const { user, token } = await authApi.signup({
-        name: values.name,
+      await authApi.signup({
+        username: values.username,
         email: values.email,
         password: values.password,
       });
-      localStorage.setItem("auth_token", token);
+  
+      const { user } = await authApi.login({
+        email: values.email,
+        password: values.password,
+      });
+  
       navigate("/dashboard", { replace: true, state: { userId: user.id } });
     } catch (err) {
       const message =
@@ -111,10 +116,10 @@ export default function Signup() {
                   autoComplete="name"
                   placeholder="Jane Doe"
                   className="pl-10"
-                  {...register("name")}
+                  {...register("username")}
                 />
               </div>
-              <FieldError message={errors.name?.message} />
+              <FieldError message={errors.username?.message} />
             </div>
 
             <div>

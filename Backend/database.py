@@ -1,9 +1,36 @@
-from motor.motor_asyncio import AsyncIOMotorClient
-from beanie import init_beanie
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    create_async_engine,
+    async_sessionmaker,
+)
+from sqlalchemy.orm import DeclarativeBase
 from config import settings
-from models.user import User
+
+
+# PostgreSQL Async Engine
+engine = create_async_engine(
+    settings.database_url,
+    echo=True,          # Set to False in production
+    
+)
+
+class Base(DeclarativeBase):
+    pass
 
 async def init_db():
-    client = AsyncIOMotorClient(settings.mongo_uri)
-    db = client[settings.database_name]          # ✅ select the actual database
-    await init_beanie(database=db, document_models=[User])
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+# Session Factory
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
+
+
+# Dependency for FastAPI
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session

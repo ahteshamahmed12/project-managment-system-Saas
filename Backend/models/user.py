@@ -1,14 +1,54 @@
-from beanie import Document, Indexed
-from pydantic import EmailStr
-from typing import Annotated
+import uuid
 from datetime import datetime
 
-class User(Document):
-    username: str
-    email: Annotated[EmailStr, Indexed(unique=True)]
-    hashed_password: str
-    is_active: bool = True
-    created_at: datetime = datetime.utcnow()
+from sqlalchemy import Boolean, DateTime, String
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from sqlalchemy.orm import Mapped, mapped_column
 
-    class Settings:
-        name = "users"
+from database import Base
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    username: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+    )
+
+    email: Mapped[str] = mapped_column(
+        String(255),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+
+    hashed_password: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+
+    role: Mapped[str] = mapped_column(
+        String(20),
+        default="member",
+        nullable=False,
+    )
+
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )

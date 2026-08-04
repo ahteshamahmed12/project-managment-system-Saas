@@ -1,13 +1,16 @@
+// src/types/auth.ts
+
 export interface User {
   id: string;
-  name: string;
+  username: string;
   email: string;
-  createdAt: string;
+  is_active: boolean;
 }
 
 export interface AuthResponse {
-  user: User;
-  token: string;
+  access_token: string;
+  refresh_token: string;
+  token_type: "bearer";
 }
 
 export interface LoginPayload {
@@ -16,13 +19,13 @@ export interface LoginPayload {
 }
 
 export interface SignupPayload {
-  name: string;
+  username: string;
   email: string;
   password: string;
 }
 
 export interface UpdateProfilePayload {
-  name?: string;
+  username?: string;
   email?: string;
 }
 
@@ -37,5 +40,5 @@ export interface ResetPasswordPayload {
 
 export interface ApiErrorShape {
   message: string;
-  errors?: Record<string, string>;
+  errors?: Record<string, string[]>;
 }

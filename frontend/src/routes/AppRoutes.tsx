@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import MainLayout from "../components/layout/MainLayout";
+import ProtectedRoute from "./ProtectedRoute";
 
-import Dashboard from "../pages/Dashboard";
+import Dashboard from "@/pages/Dashboard";
 import Projects from "@/pages/Projects";
 import Tasks from "@/pages/Tasks";
 import Sprint from "@/pages/Sprint";
@@ -14,21 +14,16 @@ import Signup from "@/pages/Auth/signup";
 import Login from "@/pages/Auth/login";
 
 export default function AppRoutes() {
-  const isAuthenticated = !!localStorage.getItem("auth_token");
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public Routes */}
+        {/* Public */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* Protected Routes */}
-        <Route
-          element={
-            isAuthenticated ? <MainLayout /> : <Navigate to="/login" replace />
-          }
-        >
-          <Route path="/" element={<Dashboard />} />
+        {/* Protected */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/tasks" element={<Tasks />} />
@@ -38,6 +33,9 @@ export default function AppRoutes() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
+
+        {/* 404 */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   );
