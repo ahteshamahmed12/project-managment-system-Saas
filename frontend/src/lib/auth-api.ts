@@ -8,181 +8,201 @@ import type {
   User,
 } from "@/types/auth";
 
-const API_BASE = "http://127.0.0.1:8000/api";
+type MockUser = User & {
+  password: string;
+};
 
-const ACCESS_TOKEN_KEY = "access_token";
-const REFRESH_TOKEN_KEY = "refresh_token";
+const USERS_KEY = "mock_users";
+const CURRENT_USER_KEY = "current_user";
+const TOKEN_KEY = "auth_token";
 
-interface TokenResponse {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  
-}
+const defaultUsers: MockUser[] = [
+  {
+    id: crypto.randomUUID(),
+    name: "Admin",
+    email: "admin@gmail.com",
+    password: "12345678",
+    createdAt: new Date().toISOString(),
+  },
+];
 
-// Normalizes FastAPI error shapes into a single readable string.
-// Handles plain string `detail` (custom errors) and array `detail`
-// (Pydantic 422 validation errors: [{ loc, msg, type }, ...]).
-function extractErrorMessage(detail: unknown): string {
-  if (typeof detail === "string") {
-    return detail;
+const getUsers = (): MockUser[] => {
+  const stored = localStorage.getItem(USERS_KEY);
+
+  if (!stored) {
+    localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
+    return defaultUsers;
   }
 
-  if (Array.isArray(detail) && detail.length > 0) {
-    const first = detail[0];
-    if (typeof first === "string") return first;
-    if (first?.msg) return first.msg;
-  }
+  return JSON.parse(stored) as MockUser[];
+};
 
-  return "Something went wrong. Please try again.";
-}
+const saveUsers = (users: MockUser[]) => {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+};
 
-async function request<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-
-  const headers = new Headers(options.headers);
-
-  const isFormBody =
-    options.body instanceof FormData ||
-    options.body instanceof URLSearchParams;
-
-  if (!isFormBody) {
-    headers.set("Content-Type", "application/json");
-  }
-
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-  });
-
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    throw new Error(extractErrorMessage(data?.detail));
-  }
-
-  return data as T;
-}
-
-function saveTokens(access: string, refresh: string) {
-  localStorage.setItem(ACCESS_TOKEN_KEY, access);
-  localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
-}
-
-function clearTokens() {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
-}
+const delay = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const authApi = {
-  async signup(payload: SignupPayload): Promise<User> {
-    return request<User>("/auth/signup", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  },
+  signup: async (payload: SignupPayload): Promise<AuthResponse> => {
+    await delay();
 
-  async login(payload: LoginPayload): Promise<AuthResponse> {
-    // OAuth2PasswordRequestForm requires x-www-form-urlencoded,
-    // and the username field is always literally named "username"
-    // even when it holds an email address.
-    const formBody = new URLSearchParams();
-    formBody.append("username", payload.email);
-    formBody.append("password", payload.password);
+    const users = getUsers();
 
-    const tokenData = await request<TokenResponse>("/auth/login", {
-      method: "POST",
-      body: formBody,
-    });
+    const exists = users.find(
+      (u) => u.email.toLowerCase() === payload.email.toLowerCase(),
+    );
 
-    saveTokens(tokenData.access_token, tokenData.refresh_token);
+    if (exists) {
+      throw new Error("Email already exists.");
+    }
 
-    // Backend's /auth/login only returns tokens, not a user object,
-    // so fetch the user separately using the token we just saved.
-    const user = await request<User>("/auth/me");
+    const newUser: MockUser = {
+      id: crypto.randomUUID(),
+      name: payload.name,
+      email: payload.email,
+      password: payload.password,
+      createdAt: new Date().toISOString(),
+    };
+
+    users.push(newUser);
+
+    saveUsers(users);
+
+    const { password: _password, ...user } = newUser;
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    localStorage.setItem(TOKEN_KEY, "mock-token");
 
     return {
       user,
-      token: tokenData.access_token,
+      token: "mock-token",
     };
   },
 
-  async refreshToken(): Promise<string> {
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+  login: async (payload: LoginPayload): Promise<AuthResponse> => {
+    await delay();
 
-    if (!refreshToken) {
-      throw new Error("Refresh token not found.");
+    const users = getUsers();
+
+    const foundUser = users.find(
+      (u) =>
+        u.email.toLowerCase() === payload.email.toLowerCase() &&
+        u.password === payload.password,
+    );
+
+    if (!foundUser) {
+      throw new Error("Invalid email or password.");
     }
 
-    const data = await request<TokenResponse>("/auth/refresh", {
-      method: "POST",
-      body: JSON.stringify({
-        refresh_token: refreshToken,
-      }),
-    });
+    const { password, ...user } = foundUser;
 
-    saveTokens(data.access_token, data.refresh_token);
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    localStorage.setItem(TOKEN_KEY, "mock-token");
 
-    return data.access_token;
+    return {
+      user,
+      token: "mock-token",
+    };
   },
 
-  async getCurrentUser(): Promise<User> {
-    return request<User>("/auth/me");
+  getCurrentUser: async (): Promise<User> => {
+    await delay(200);
+
+    const user = localStorage.getItem(CURRENT_USER_KEY);
+
+    if (!user) {
+      throw new Error("User not found.");
+    }
+
+    return JSON.parse(user) as User;
   },
 
-  async updateProfile(payload: UpdateProfilePayload): Promise<User> {
-    return request<User>("/auth/me", {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    });
+  updateProfile: async (payload: UpdateProfilePayload): Promise<User> => {
+    await delay();
+
+    const current = localStorage.getItem(CURRENT_USER_KEY);
+
+    if (!current) {
+      throw new Error("User not found.");
+    }
+
+    const currentUser = JSON.parse(current) as User;
+
+    const users = getUsers();
+
+    const index = users.findIndex((u) => u.id === currentUser.id);
+
+    if (index === -1) {
+      throw new Error("User not found.");
+    }
+
+    users[index] = {
+      ...users[index],
+      ...payload,
+    };
+
+    saveUsers(users);
+
+    const { password, ...updatedUser } = users[index];
+
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
+
+    return updatedUser;
   },
 
-  async deleteAccount(): Promise<void> {
-    await request<void>("/auth/me", {
-      method: "DELETE",
-    });
+  deleteAccount: async (): Promise<void> => {
+    await delay();
 
-    clearTokens();
+    const current = localStorage.getItem(CURRENT_USER_KEY);
+
+    if (!current) return;
+
+    const currentUser = JSON.parse(current) as User;
+
+    const users = getUsers().filter((u) => u.id !== currentUser.id);
+
+    saveUsers(users);
+
+    localStorage.removeItem(CURRENT_USER_KEY);
+    localStorage.removeItem(TOKEN_KEY);
   },
 
-  async forgotPassword(
-    payload: ForgotPasswordPayload
-  ): Promise<{ message: string }> {
-    return request("/auth/forgot-password", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
+  forgotPassword: async (
+    payload: ForgotPasswordPayload,
+  ): Promise<{ message: string }> => {
+    await delay();
+
+    const users = getUsers();
+
+    const exists = users.some(
+      (u) => u.email.toLowerCase() === payload.email.toLowerCase(),
+    );
+
+    if (!exists) {
+      throw new Error("Email not found.");
+    }
+
+    return {
+      message: "Password reset link sent successfully.",
+    };
   },
 
-  async resetPassword(
-    payload: ResetPasswordPayload
-  ): Promise<{ message: string }> {
-    return request("/auth/reset-password", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
+  resetPassword: async (
+    payload: ResetPasswordPayload,
+  ): Promise<{ message: string }> => {
+    await delay();
+
+    void payload;
+
+    return {
+      message: "Password reset successful.",
+    };
   },
 
-  logout() {
-    clearTokens();
-  },
+  logout: async (): Promise<void> => {
+    await delay(200);
 
-  getAccessToken() {
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
-  },
-
-  getRefreshToken() {
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
-  },
-
-  isAuthenticated() {
-    return !!localStorage.getItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(CURRENT_USER_KEY);
+    localStorage.removeItem(TOKEN_KEY);
   },
 };

@@ -1,3 +1,60 @@
+// import * as React from "react";
+// import { ShieldCheck } from "lucide-react";
+
+// interface AuthShellProps {
+//   eyebrow: string;
+//   headline: string;
+//   children: React.ReactNode;
+// }
+
+// export function AuthShell({ eyebrow, headline, children }: AuthShellProps) {
+//   return (
+//     <div className="flex min-h-screen w-full bg-ink-50">
+//       {/* Brand panel */}
+//       <div className="relative hidden w-[42%] flex-col justify-between overflow-hidden bg-ink-950 p-12 text-white lg:flex">
+//         <div
+//           aria-hidden="true"
+//           className="pointer-events-none absolute inset-0 bg-linear-to-br from-brand-600 via-violet-500/60 to-ink-950"
+//         />
+//         <div
+//           aria-hidden="true"
+//           className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-brand-400/30 blur-3xl"
+//         />
+//         <div
+//           aria-hidden="true"
+//           className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 translate-x-1/4 translate-y-1/4 rounded-full bg-violet-500/40 blur-3xl"
+//         />
+
+//         <div className="relative z-10 flex items-center gap-2">
+//           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 backdrop-blur-sm">
+//             <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+//           </div>
+//           <span className="font-display text-lg font-semibold tracking-tight">
+//             Auralink
+//           </span>
+//         </div>
+
+//         <div className="relative z-10 max-w-sm">
+//           <p className="mb-3 text-sm font-medium uppercase tracking-widest text-white/70">
+//             {eyebrow}
+//           </p>
+//           <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight">
+//             {headline}
+//           </h2>
+//         </div>
+
+//         <p className="relative z-10 text-xs text-white/50">
+//           © {new Date().getFullYear()} Auralink. All rights reserved.
+//         </p>
+//       </div>
+
+//       {/* Form panel */}
+//       <div className="flex w-full flex-1 items-center justify-center p-6 sm:p-10">
+//         <div className="w-full max-w-105">{children}</div>
+//       </div>
+//     </div>
+//   );
+// }
 import * as React from "react";
 import { ShieldCheck } from "lucide-react";
 
@@ -9,48 +66,59 @@ interface AuthShellProps {
 
 export function AuthShell({ eyebrow, headline, children }: AuthShellProps) {
   return (
-    <div className="flex min-h-screen w-full bg-ink-50">
-      {/* Brand panel */}
-      <div className="relative hidden w-[42%] flex-col justify-between overflow-hidden bg-ink-950 p-12 text-white lg:flex">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-linear-to-br from-brand-600 via-violet-500/60 to-ink-950"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -left-24 -top-24 h-96 w-96 rounded-full bg-brand-400/30 blur-3xl"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 translate-x-1/4 translate-y-1/4 rounded-full bg-violet-500/40 blur-3xl"
-        />
+    <div className="flex min-h-screen w-full bg-[#F5EFE7]">
+      {/* Left Branding */}
+      <div className="relative hidden w-[42%] overflow-hidden bg-black lg:flex lg:flex-col lg:justify-between">
+        {/* Orange Glow */}
+        <div className="absolute -left-32 -top-24 h-80 w-80 rounded-full bg-orange-500/30 blur-3xl" />
 
-        <div className="relative z-10 flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 backdrop-blur-sm">
-            <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+        <div className="absolute bottom-0 right-0 h-72 w-72 translate-x-1/3 translate-y-1/3 rounded-full bg-orange-400/20 blur-3xl" />
+
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-linear-to-br from-orange-500/20 via-black to-black" />
+
+        {/* Content */}
+        <div className="relative z-10 flex h-full flex-col justify-between p-12">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500 shadow-lg">
+              <ShieldCheck className="h-5 w-5 text-white" />
+            </div>
+
+            <span className="text-2xl font-bold tracking-wide text-white">
+              Promage
+            </span>
           </div>
-          <span className="font-display text-lg font-semibold tracking-tight">
-            Auralink
-          </span>
-        </div>
 
-        <div className="relative z-10 max-w-sm">
-          <p className="mb-3 text-sm font-medium uppercase tracking-widest text-white/70">
-            {eyebrow}
-          </p>
-          <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight">
-            {headline}
-          </h2>
-        </div>
+          {/* Heading */}
+          <div className="max-w-md">
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-orange-400">
+              {eyebrow}
+            </p>
 
-        <p className="relative z-10 text-xs text-white/50">
-          © {new Date().getFullYear()} Auralink. All rights reserved.
-        </p>
+            <h2 className="text-4xl font-bold leading-tight text-white">
+              {headline}
+            </h2>
+
+            <p className="mt-6 text-base leading-7 text-gray-400">
+              Manage your projects, tasks and team members with one modern
+              dashboard. Stay productive and collaborate efficiently from
+              anywhere.
+            </p>
+          </div>
+
+          {/* Footer */}
+          <div>
+            <p className="text-sm text-gray-500">
+              © {new Date().getFullYear()} Promage. All rights reserved.
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Form panel */}
-      <div className="flex w-full flex-1 items-center justify-center p-6 sm:p-10">
-        <div className="w-full max-w-105">{children}</div>
+      {/* Right Form Section */}
+      <div className="flex flex-1 items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-md">{children}</div>
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import ProtectedRoute from "./ProtectedRoute";
+import MainLayout from "../components/layout/MainLayout";
 
-import Dashboard from "@/pages/Dashboard";
+import Dashboard from "../pages/Dashboard";
 import Projects from "@/pages/Projects";
 import Tasks from "@/pages/Tasks";
 import Sprint from "@/pages/Sprint";
@@ -12,17 +12,33 @@ import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
 import Signup from "@/pages/Auth/signup";
 import Login from "@/pages/Auth/login";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AppRoutes() {
+  const { isAuthenticated } = useAuth();
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route
+          path="/login"
+          element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+          }
+        />
 
-        {/* Protected */}
-        <Route element={<ProtectedRoute />}>
+        <Route
+          path="/signup"
+          element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Signup />
+          }
+        />
+
+        {/* Protected Routes */}
+        <Route
+          element={
+            isAuthenticated ? <MainLayout /> : <Navigate to="/login" replace />
+          }
+        >
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
@@ -33,9 +49,6 @@ export default function AppRoutes() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
-
-        {/* 404 */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   );

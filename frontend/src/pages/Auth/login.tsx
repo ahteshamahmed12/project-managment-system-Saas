@@ -2,80 +2,76 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
-import { LogIn, Mail } from "lucide-react";
+import { Mail, LogIn } from "lucide-react";
 
 import { AuthShell } from "@/components/AuthShell";
 import { PasswordInput } from "@/components/PasswordInput";
 import { FieldError, FormBanner } from "@/components/FormFeedback";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { authApi } from "@/lib/auth-api";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { loginSchema, type LoginFormValues } from "@/lib/validations";
+import { authApi } from "@/lib/auth-api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
-
   const [formError, setFormError] = React.useState<string | null>(null);
-
+  const { login } = useAuth();
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "" as string,
-      password: "" as string,
-      remember: true,
-    },
+    defaultValues: { email: "", password: "", remember: true },
   });
-
   const onSubmit = async (values: LoginFormValues) => {
+    console.log("Submitted:", values);
+
     setFormError(null);
 
     try {
-      await authApi.login({
-        email: values.email!,
-        password: values.password!,
-        
-      });
-
-      navigate("/dashboard", {
-        replace: true,
-      });
-    } catch (error: any) {
-      setFormError(
-        error?.message ?? "Unable to sign in. Please try again."
-      );
+      const { user, token } = await authApi.login(values);
+      login(token);
+      if (!values.remember) {
+        // Session-only: clear the token once the browser tab closes.
+        window.addEventListener("beforeunload", () =>
+          localStorage.removeItem("auth_token"),
+        );
+      }
+      navigate("/dashboard", { replace: true, state: { userId: user.id } });
+    } catch (err) {
+      const message =
+        (err as { message?: string })?.message ??
+        "Unable to sign in. Please try again.";
+      setFormError(message);
     }
   };
 
   return (
     <AuthShell
-      eyebrow="Welcome Back"
+      eyebrow="Welcome back"
       headline="Pick up right where your team left off."
     >
-      <Card className="border-0 shadow-xl">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl font-bold">
+      <Card className="border-0 bg-white shadow-xl">
+        <CardHeader className="space-y-2 pb-6">
+          <CardTitle className="text-3xl font-bold py-4 text-black">
             Sign in
           </CardTitle>
-
-          <CardDescription>
-            Enter your email and password to continue.
+          <CardDescription className="text-gray-500">
+            Enter your credentials to access your account.
           </CardDescription>
         </CardHeader>
-
         <CardContent>
-          {formError && (
-            <FormBanner
-              variant="error"
-              message={formError}
-            />
-          )}
+          {formError && <FormBanner variant="error" message={formError} />}
 
           <form
             onSubmit={handleSubmit(onSubmit)}
@@ -83,45 +79,35 @@ export default function Login() {
             className="space-y-5"
           >
             <div>
-              <Label htmlFor="email">
-                Email Address
-              </Label>
-
-              <div className="relative mt-2">
-                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-
+              <Label htmlFor="email">Email address</Label>
+              <div className="relative mt-1.5">
+                <Mail
+                  className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                  aria-hidden="true"
+                />
                 <Input
                   id="email"
                   type="email"
                   autoComplete="email"
                   placeholder="you@example.com"
-                  className={`pl-10 ${
-                    errors.email ? "border-red-500" : ""
-                  }`}
+                  className={errors.email ? "pl-10 border-red-500" : "pl-10"}
                   {...register("email")}
                 />
               </div>
-
-              <FieldError
-                message={errors.email?.message}
-              />
+              <FieldError message={errors.email?.message} />
             </div>
 
             <div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">
-                  Password
-                </Label>
-
+                <Label htmlFor="password">Password</Label>
                 <Link
                   to="/forgot-password"
-                  className="text-sm font-medium text-primary hover:underline"
+                  className="text-xs font-medium text-orange-500 transition-colors hover:text-orange-600"
                 >
-                  Forgot Password?
+                  Forgot password?
                 </Link>
               </div>
-
-              <div className="mt-2">
+              <div className="mt-1.5">
                 <PasswordInput
                   id="password"
                   autoComplete="current-password"
@@ -130,19 +116,15 @@ export default function Login() {
                   {...register("password")}
                 />
               </div>
-
-              <FieldError
-                message={errors.password?.message}
-              />
+              <FieldError message={errors.password?.message} />
             </div>
 
-            <label className="flex items-center gap-2 text-sm">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
               <input
                 type="checkbox"
-                className="h-4 w-4 rounded"
+                className="h-4 w-4 rounded border-gray-300 text-orange-500 focus-visible:ring-2 focus-visible:ring-orange-500/30"
                 {...register("remember")}
               />
-
               Keep me signed in
             </label>
 
@@ -150,28 +132,24 @@ export default function Login() {
               type="submit"
               size="lg"
               disabled={isSubmitting}
-              className="w-full"
+              className="w-full bg-orange-500 text-white hover:bg-orange-600"
             >
-              {isSubmitting ? (
-                "Signing In..."
-              ) : (
-                <>
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Sign In
-                </>
+              {!isSubmitting && (
+                <LogIn className="h-4 w-4" aria-hidden="true" />
               )}
+              Sign in
             </Button>
           </form>
 
-          <div className="mt-8 text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
+          <p className="mt-6 text-center text-sm text-gray-500">
+            Don&apos;t have an account?{" "}
             <Link
               to="/signup"
-              className="font-semibold text-primary hover:underline"
+              className="font-medium text-orange-500 transition-colors hover:text-orange-600"
             >
               Create one
             </Link>
-          </div>
+          </p>
         </CardContent>
       </Card>
     </AuthShell>
