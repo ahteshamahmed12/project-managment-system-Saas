@@ -7,7 +7,7 @@ import Projects from "@/pages/Projects";
 import Tasks from "@/pages/Tasks";
 import Sprint from "@/pages/Sprint";
 import TeamManagement from "@/pages/TeamManagement";
-import Users from "@/pages/Users";
+import Users from "@/pages/Users/index";
 import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
 import Signup from "@/pages/Auth/signup";
