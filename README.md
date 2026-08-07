@@ -195,6 +195,48 @@ http://localhost:8000/redoc
 
 ---
 
+Sprint Workflow
+Planned
+   ↓
+Active
+   ↓
+Completed
+
+A sprint contains a specific group of tasks that the team plans to complete within a defined period.
+
+Example:
+
+Sprint 1
+Duration: 2 Weeks
+Goal: Complete Authentication
+
+Tasks:
+✓ Login API
+✓ Signup API
+✓ Authentication UI
+○ Email Verification
+○ Forgot Password
+🛠️ Tech Stack
+Frontend
+React
+TypeScript
+Vite
+Tailwind CSS
+React Router
+Lucide React
+Shadcn/UI
+Backend
+Python
+FastAPI
+SQLAlchemy
+PostgreSQL
+Pydantic
+Development Tools
+Git
+GitHub
+VS Code
+Postman
+
 ## 🤝 Contributing
 
 Contributions are welcome!
