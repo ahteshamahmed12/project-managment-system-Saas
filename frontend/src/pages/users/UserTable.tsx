@@ -26,7 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/EmptyState";
 import { cn } from "@/lib/utils";
 
-import type { User } from "./userData";
+import type { User } from "@/pages/users/userData";
 
 interface UserTableProps {
   users: User[];

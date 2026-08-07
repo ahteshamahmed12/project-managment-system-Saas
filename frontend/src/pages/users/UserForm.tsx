@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import type { User, UserRole, UserDepartment, UserStatus } from "./userData";
+import type { User, UserRole, UserDepartment, UserStatus } from "@/pages/users/userData";
 
 interface UserFormProps {
   initialData?: User | null;
