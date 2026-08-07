@@ -2,7 +2,7 @@ import * as React from "react";
 import { Plus, Search, RotateCcw, Users } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-
+import DeleteConfirm from "@/components/common/DeleteConfirm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,6 +17,7 @@ import UserTable from "./UserTable";
 import UserModal from "./UserModal";
 
 import { userData, type User } from "./userData";
+import SearchFilterBar from "@/components/common/SearchFilterBar";
 type StatusFilter = "All" | User["status"];
 type RoleFilter = "All" | User["role"];
 
@@ -42,6 +43,9 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
 
   const [modalOpen, setModalOpen] = React.useState(false);
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
+
+  const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
   const filteredUsers = React.useMemo(() => {
     return users.filter((user) => {
       const matchesSearch =
@@ -66,11 +70,21 @@ export default function UsersPage() {
     setModalOpen(true);
   };
 
-  const handleDelete = (user: User) => {
-    if (!window.confirm(`Delete ${user.name}?`)) return;
+  const handleDeleteUser = React.useCallback((user: User) => {
+    setSelectedUser(user);
+    setDeleteOpen(true);
+  }, []);
+  const confirmDelete = React.useCallback(() => {
+    if (!selectedUser) return;
 
-    setUsers((prev) => prev.filter((x) => x.id !== user.id));
-  };
+    setUsers((prev) => prev.filter((u) => u.id !== selectedUser.id));
+
+    setSelectedUser(null);
+    setDeleteOpen(false);
+
+    // TODO:
+    // await userApi.delete(selectedUser.id)
+  }, [selectedUser]);
 
   const handleSave = (values: UserFormValues) => {
     if (editingUser) {
@@ -125,75 +139,72 @@ export default function UsersPage() {
       </div>
 
       {/* Filters */}
+      <SearchFilterBar>
+        <div className="relative w-full sm:max-w-xs sm:flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
 
-      <div className="rounded-2xl border bg-white p-4 shadow-sm">
-        <div className="grid gap-3 md:grid-cols-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search..."
-              className="pl-9"
-            />
-          </div>
-
-          <Select
-            value={status}
-            onValueChange={(v) => setStatus(v as StatusFilter)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-
-            <SelectContent>
-              {STATUS_OPTIONS.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {item}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={role} onValueChange={(v) => setRole(v as RoleFilter)}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-
-            <SelectContent>
-              {ROLE_OPTIONS.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {item}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSearch("");
-              setRole("All");
-              setStatus("All");
-            }}
-            className={cn(
-              "gap-2",
-              (search || role !== "All" || status !== "All") &&
-                "border-orange-300 text-orange-600",
-            )}
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reset
-          </Button>
+          <Input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name or email..."
+            className="rounded-xl border-gray-200 pl-9 focus-visible:ring-orange-500"
+          />
         </div>
-      </div>
 
+        <Select
+          value={status}
+          onValueChange={(v) => setStatus(v as StatusFilter)}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+
+          <SelectContent>
+            {STATUS_OPTIONS.map((item) => (
+              <SelectItem key={item} value={item}>
+                {item}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={role} onValueChange={(v) => setRole(v as RoleFilter)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+
+          <SelectContent>
+            {ROLE_OPTIONS.map((item) => (
+              <SelectItem key={item} value={item}>
+                {item}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Button
+          variant="outline"
+          onClick={() => {
+            setSearch("");
+            setRole("All");
+            setStatus("All");
+          }}
+          className={cn(
+            "gap-2",
+            (search || role !== "All" || status !== "All") &&
+              "border-orange-300 text-orange-600",
+          )}
+        >
+          <RotateCcw className="h-4 w-4" />
+          Reset
+        </Button>
+      </SearchFilterBar>
       <UserTable
         users={filteredUsers}
         onChange={setUsers}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={handleDeleteUser}
       />
 
       <UserModal
@@ -201,6 +212,13 @@ export default function UsersPage() {
         onOpenChange={setModalOpen}
         user={editingUser}
         onSave={handleSave}
+      />
+      <DeleteConfirm
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete User"
+        description={`Are you sure you want to delete "${selectedUser?.name}"? This action cannot be undone.`}
+        onConfirm={confirmDelete}
       />
     </div>
   );

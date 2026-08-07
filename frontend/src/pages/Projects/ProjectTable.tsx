@@ -31,7 +31,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
+import Pagination from "@/components/common/Pagination";
+import StatusBadge from "@/components/common/StatusBadge";
+const PAGE_SIZE = 8;
 /* =========================================================
    TYPES
 ========================================================= */
@@ -55,16 +57,6 @@ export interface ProjectTableProps {
   onEdit: (project: Project) => void;
   onDelete: (project: Project) => void;
 }
-
-/* =========================================================
-   STATIC CONFIG
-========================================================= */
-
-const STATUS_STYLES: Record<Project["status"], string> = {
-  Active: "bg-green-100 text-green-700 border border-green-300",
-  "On Hold": "bg-yellow-100 text-yellow-700 border border-yellow-300",
-  Completed: "bg-blue-100 text-blue-700 border border-blue-300",
-};
 
 const PRIORITY_STYLES: Record<Project["priority"], string> = {
   Low: "bg-gray-100 text-gray-700 border border-gray-300",
@@ -198,15 +190,7 @@ function SortableRow({
       </TableCell>
 
       <TableCell className="py-3">
-        <Badge
-          variant="outline"
-          className={cn(
-            "rounded-full px-2.5 py-0.5 font-medium",
-            STATUS_STYLES[project.status],
-          )}
-        >
-          {project.status}
-        </Badge>
+        <StatusBadge status={project.status} />
       </TableCell>
 
       <TableCell className="py-3">
@@ -297,7 +281,15 @@ export function ProjectTable({
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
+  const [page, setPage] = React.useState(1);
+  const totalPages = Math.max(1, Math.ceil(projects.length / PAGE_SIZE));
 
+  const currentPage = Math.min(page, totalPages);
+  const paginatedProjects = React.useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+
+    return projects.slice(start, start + PAGE_SIZE);
+  }, [projects, currentPage]);
   const handleDragEnd = React.useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
@@ -319,8 +311,8 @@ export function ProjectTable({
   );
 
   const projectIds = React.useMemo(
-    () => projects.map((project) => project.id),
-    [projects],
+    () => paginatedProjects.map((project) => project.id),
+    [paginatedProjects],
   );
 
   return (
@@ -356,7 +348,7 @@ export function ProjectTable({
                   items={projectIds}
                   strategy={verticalListSortingStrategy}
                 >
-                  {projects.map((project) => (
+                  {paginatedProjects.map((project) => (
                     <SortableRow
                       key={project.id}
                       project={project}
@@ -370,6 +362,13 @@ export function ProjectTable({
           </Table>
         </DndContext>
       </div>
+      <Pagination
+        page={currentPage}
+        totalPages={totalPages}
+        totalItems={projects.length} // UserTable me users.length
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
     </div>
   );
 }
