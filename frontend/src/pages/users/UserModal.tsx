@@ -5,8 +5,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import UserForm from "./UserForm";
-import type { User } from "./userData";
+import UserForm from "@/pages/users/UserForm";
+import type { User } from "@/pages/users/userData";
 
 interface UserModalProps {
   open: boolean;

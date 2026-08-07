@@ -43,7 +43,7 @@ export default function AppRoutes() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/tasks" element={<Tasks />} />
-          <Route path="/sprint" element={<Sprint />} />
+          <Route path="/sprint" element={<Sprint projectId={0} />} />
           <Route path="/teammanagement" element={<TeamManagement />} />
           <Route path="/users" element={<Users />} />
           <Route path="/reports" element={<Reports />} />
