@@ -5,7 +5,7 @@ import MainLayout from "../components/layout/MainLayout";
 import Dashboard from "../pages/Dashboard";
 import Projects from "@/pages/Projects";
 import Tasks from "@/pages/Tasks/index";
-import Sprint from "@/pages/Sprint";
+import Sprint from "@/pages/sprint/index";
 import TeamManagement from "@/pages/TeamManagement";
 import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
@@ -43,7 +43,7 @@ export default function AppRoutes() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/tasks" element={<Tasks />} />
-          <Route path="/sprint" element={<Sprint projectId={0} />} />
+          <Route path="/sprint" element={<Sprint />} />
           <Route path="/teammanagement" element={<TeamManagement />} />
           <Route path="/users" element={<Users />} />
           <Route path="/reports" element={<Reports />} />
