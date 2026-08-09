@@ -6,8 +6,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-import SprintForm from "./SprintForm";
 import type { Sprint } from "./sprintData";
+import SprintForm from "./SprintForm";
 
 interface SprintModalProps {
   open: boolean;
