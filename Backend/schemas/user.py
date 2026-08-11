@@ -14,6 +14,7 @@ class UserOut(BaseModel):
     username: str
     email: EmailStr
     is_active: bool
+    roles : list[str]
 
     model_config = ConfigDict(from_attributes=True)
 
