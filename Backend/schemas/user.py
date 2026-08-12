@@ -1,29 +1,56 @@
 import uuid
+from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from sqlalchemy import Boolean, DateTime, String
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql import func
 
-
-class UserCreate(BaseModel):
-    username: str = Field(..., min_length=3, max_length=50)
-    email: EmailStr
-    password: str = Field(..., min_length=6)
-
-
-class UserOut(BaseModel):
-    id: uuid.UUID
-    username: str
-    email: EmailStr
-    is_active: bool
-    roles : list[str]
-
-    model_config = ConfigDict(from_attributes=True)
+from database import Base
+from models.role import user_roles
 
 
-class Token(BaseModel):
-    access_token: str
-    refresh_token: str
-    token_type: str = "bearer"
+class User(Base):
+    __tablename__ = "users"
 
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
 
-class RefreshRequest(BaseModel):
-    refresh_token: str
+    username: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+    )
+
+    email: Mapped[str] = mapped_column(
+        String(255),
+        unique=True,
+        index=True,
+        nullable=False,
+    )
+
+    hashed_password: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    roles = relationship(
+        "Role",
+        secondary=user_roles,
+        back_populates="users",
+        lazy="selectin",
+    )

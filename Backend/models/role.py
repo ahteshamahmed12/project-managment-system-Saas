@@ -1,57 +1,157 @@
-# models/role.py
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, Boolean
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
-from sqlalchemy.orm import relationship
+import uuid
 from datetime import datetime
 
-# Association table for many-to-many: roles <-> permissions
-role_permissions = Table(
-    'role_permissions',
-    Base.metadata,
-    Column('role_id', Integer, ForeignKey('roles.id')),
-    Column('permission_id', Integer, ForeignKey('permissions.id'))
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    String,
+    Table,
+    Column,
+    Text,
 )
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import UUID
 
-# Association table for many-to-many: users <-> roles
+from database import Base
+
+
+# ============================================================
+# USER <-> ROLE
+# ============================================================
+
 user_roles = Table(
-    'user_roles',
+    "user_roles",
     Base.metadata,
-    Column('user_id', Integer, ForeignKey('users.id')),
-    Column('role_id', Integer, ForeignKey('roles.id')),
-    Column('workspace_id', Integer, ForeignKey('workspaces.id'))
+
+    Column(
+        "user_id",
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+
+    Column(
+        "role_id",
+        UUID(as_uuid=True),
+        ForeignKey("roles.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
 )
 
-class Permission(Base):
-    __tablename__ = "permissions"
-    
-    id = Column(Integer, primary_key=True)
-    name = Column(String, unique=True)  # e.g., "create_project", "delete_task"
-    description = Column(String)
-    resource = Column(String)  # e.g., "project", "task", "sprint"
-    action = Column(String)  # e.g., "create", "read", "update", "delete"
-    
-    roles = relationship("Role", secondary=role_permissions, back_populates="permissions")
+
+# ============================================================
+# ROLE <-> PERMISSION
+# ============================================================
+
+role_permissions = Table(
+    "role_permissions",
+    Base.metadata,
+
+    Column(
+        "role_id",
+        UUID(as_uuid=True),
+        ForeignKey("roles.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+
+    Column(
+        "permission_id",
+        UUID(as_uuid=True),
+        ForeignKey("permissions.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
+
+
+# ============================================================
+# ROLE
+# ============================================================
 
 class Role(Base):
     __tablename__ = "roles"
-    
-    id = Column(Integer, primary_key=True)
-    name = Column(String, unique=True)  # e.g., "admin", "project_manager"
-    description = Column(String)
-    workspace_id = Column(Integer, ForeignKey('workspaces.id'))
-    is_default = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    permissions = relationship("Permission", secondary=role_permissions, back_populates="roles")
-    users = relationship("User", secondary=user_roles)
 
-class User(Base):
-    __tablename__ = "users"
-    
-    id = Column(Integer, primary_key=True)
-    email = Column(String, unique=True)
-    # ... other fields
-    
-    roles = relationship("Role", secondary=user_roles)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    name: Mapped[str] = mapped_column(
+        String(50),
+        unique=True,
+        nullable=False,
+        index=True,
+    )
+
+    description: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    is_system_role: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    users = relationship(
+        "User",
+        secondary=user_roles,
+        back_populates="roles",
+    )
+
+    permissions = relationship(
+        "Permission",
+        secondary=role_permissions,
+        back_populates="roles",
+    )
+
+
+# ============================================================
+# PERMISSION
+# ============================================================
+
+class Permission(Base):
+    __tablename__ = "permissions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    name: Mapped[str] = mapped_column(
+        String(100),
+        unique=True,
+        nullable=False,
+        index=True,
+    )
+
+    description: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    resource: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+    )
+
+    action: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+    )
+
+    roles = relationship(
+        "Role",
+        secondary=role_permissions,
+        back_populates="permissions",
+    )
