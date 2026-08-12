@@ -101,9 +101,10 @@ export default function SprintForm({
   return (
     <form onSubmit={handleSubmit(submitForm)} className="space-y-5">
       {/* Sprint Name */}
-
       <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Sprint Name</label>
+        <label className="text-sm font-medium text-foreground">
+          Sprint Name
+        </label>
 
         <Input
           {...register("sprint_name")}
@@ -117,9 +118,8 @@ export default function SprintForm({
       </div>
 
       {/* Project */}
-
       <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Project</label>
+        <label className="text-sm font-medium text-foreground">Project</label>
 
         <Select
           value={selectedProject}
@@ -148,9 +148,10 @@ export default function SprintForm({
       </div>
 
       {/* Goal */}
-
       <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Sprint Goal</label>
+        <label className="text-sm font-medium text-foreground">
+          Sprint Goal
+        </label>
 
         <Textarea
           {...register("goal")}
@@ -164,17 +165,16 @@ export default function SprintForm({
       </div>
 
       {/* Dates */}
-
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
+          <label className="text-sm font-medium text-foreground">
             Start Date
           </label>
 
           <Input
             type="date"
-            {...register("start_date")}
-            className="rounded-xl"
+            {...register("end_date")}
+            className="rounded-xl dark:[&::-webkit-calendar-picker-indicator]:invert"
           />
 
           {errors.start_date && (
@@ -183,9 +183,15 @@ export default function SprintForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">End Date</label>
+          <label className="text-sm font-medium text-foreground">
+            End Date
+          </label>
 
-          <Input type="date" {...register("end_date")} className="rounded-xl" />
+          <Input
+            type="date"
+            {...register("end_date")}
+            className="rounded-xl dark:[&::-webkit-calendar-picker-indicator]:invert"
+          />
 
           {errors.end_date && (
             <p className="text-sm text-red-500">{errors.end_date.message}</p>
@@ -194,9 +200,8 @@ export default function SprintForm({
       </div>
 
       {/* Status */}
-
       <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Status</label>
+        <label className="text-sm font-medium text-foreground">Status</label>
 
         <Select
           value={selectedStatus}
@@ -225,8 +230,7 @@ export default function SprintForm({
       </div>
 
       {/* Actions */}
-
-      <div className="flex justify-end gap-3 border-t pt-5">
+      <div className="flex justify-end gap-3 border-t border-border pt-5">
         <Button
           type="button"
           variant="outline"

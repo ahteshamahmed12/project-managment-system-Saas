@@ -5,8 +5,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import UserForm from "@/pages/users/UserForm";
-import type { User } from "@/pages/users/userData";
+import UserForm from "./UserForm";
+import type { User } from "./userData";
 
 interface UserModalProps {
   open: boolean;
@@ -23,9 +23,9 @@ export default function UserModal({
 }: UserModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-2xl sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto bg-background sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
+          <DialogTitle className="text-foreground">
             {user ? "Edit User" : "Create New User"}
           </DialogTitle>
         </DialogHeader>

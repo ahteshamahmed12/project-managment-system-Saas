@@ -26,11 +26,13 @@ export default function DeleteConfirm({
 }: DeleteConfirmProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="rounded-2xl">
+      <AlertDialogContent className="rounded-2xl bg-card text-card-foreground">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-xl">{title}</AlertDialogTitle>
+          <AlertDialogTitle className="text-xl text-foreground">
+            {title}
+          </AlertDialogTitle>
 
-          <AlertDialogDescription className="text-gray-500">
+          <AlertDialogDescription className="text-muted-foreground">
             {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -40,7 +42,7 @@ export default function DeleteConfirm({
 
           <AlertDialogAction
             onClick={onConfirm}
-            className="rounded-xl bg-red-500 hover:bg-red-600"
+            className="rounded-xl bg-red-500 text-white hover:bg-red-600"
           >
             Delete
           </AlertDialogAction>

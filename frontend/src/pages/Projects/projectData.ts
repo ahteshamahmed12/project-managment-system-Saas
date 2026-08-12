@@ -1,3 +1,5 @@
+import type { TaskAttachment } from "@/components/common/FileUpload";
+
 export interface Project {
   id: string;
   project_name: string;
@@ -5,6 +7,7 @@ export interface Project {
   description: string;
   status: "Active" | "On Hold" | "Completed";
   priority: "Low" | "Medium" | "High";
+  attachments: TaskAttachment[];
   start_date: string;
   end_date: string;
   created_by: string;
@@ -23,6 +26,8 @@ export const projectData: Project[] = [
     end_date: "2026-10-15",
     created_by: "Alex",
     created_at: "2026-08-01",
+
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -35,6 +40,8 @@ export const projectData: Project[] = [
     end_date: "2026-09-30",
     created_by: "Sam",
     created_at: "2026-07-20",
+
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -47,6 +54,8 @@ export const projectData: Project[] = [
     end_date: "2026-07-01",
     created_by: "John",
     created_at: "2026-05-01",
+
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -59,6 +68,8 @@ export const projectData: Project[] = [
     end_date: "2026-11-10",
     created_by: "Emma",
     created_at: "2026-08-10",
+
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -71,6 +82,7 @@ export const projectData: Project[] = [
     end_date: "2025-09-15",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -83,6 +95,7 @@ export const projectData: Project[] = [
     end_date: "2025-11-20",
     created_by: "Manager",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -95,6 +108,7 @@ export const projectData: Project[] = [
     end_date: "2025-05-30",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -107,6 +121,7 @@ export const projectData: Project[] = [
     end_date: "2025-10-25",
     created_by: "Team Lead",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -119,6 +134,7 @@ export const projectData: Project[] = [
     end_date: "2025-08-15",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -131,6 +147,7 @@ export const projectData: Project[] = [
     end_date: "2025-12-01",
     created_by: "Manager",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -143,6 +160,7 @@ export const projectData: Project[] = [
     end_date: "2025-09-30",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -155,6 +173,7 @@ export const projectData: Project[] = [
     end_date: "2025-06-10",
     created_by: "HR",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -167,6 +186,7 @@ export const projectData: Project[] = [
     end_date: "2025-11-30",
     created_by: "Support",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -179,5 +199,6 @@ export const projectData: Project[] = [
     end_date: "2025-10-15",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
 ];

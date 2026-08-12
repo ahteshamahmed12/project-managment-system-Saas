@@ -23,9 +23,9 @@ export default function ProjectModal({
 }: ProjectModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl rounded-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-2xl bg-card text-card-foreground sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
+          <DialogTitle className="text-foreground">
             {project ? "Edit Project" : "Create New Project"}
           </DialogTitle>
         </DialogHeader>

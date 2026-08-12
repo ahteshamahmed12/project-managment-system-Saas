@@ -139,105 +139,100 @@ export default function ProjectsPage(): React.JSX.Element {
   );
 
   return (
-    <div className="w-full bg-gray-50">
-      <div className="px-4 py-6 sm:px-6 lg:px-8">
-        {/* Page Header */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-white shadow-sm">
-              <FolderKanban className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
-                Projects
-              </h1>
-              <p className="text-sm text-gray-500">
-                Manage, track, and organize all your projects in one place.
-              </p>
-            </div>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-white shadow-sm">
+            <FolderKanban className="h-5 w-5" />
           </div>
-
-          <Button
-            type="button"
-            onClick={handleOpenCreateModal}
-            className="w-full gap-2 rounded-xl p-5 bg-orange-500 font-semibold text-white shadow-sm hover:bg-orange-600 sm:w-auto"
-          >
-            <Plus className="h-4 w-4" />
-            Create Project
-          </Button>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+              Projects
+            </h1>
+            <p className="text-sm ">
+              Manage, track, and organize all your projects in one place.
+            </p>
+          </div>
         </div>
 
-        {/* Filters */}
-        <SearchFilterBar>
-          <div className="relative w-full sm:max-w-xs sm:flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-
-            <Input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by project name..."
-              className="rounded-xl border-gray-200 pl-9 focus-visible:ring-orange-500"
-            />
-          </div>
-
-          <Select
-            value={statusFilter}
-            onValueChange={(value) => setStatusFilter(value as StatusFilter)}
-          >
-            <SelectTrigger className="w-full rounded-xl border-gray-200 sm:w-40">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map((status) => (
-                <SelectItem key={status} value={status}>
-                  {status === "All" ? "All Statuses" : status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={priorityFilter}
-            onValueChange={(value) =>
-              setPriorityFilter(value as PriorityFilter)
-            }
-          >
-            <SelectTrigger className="w-full rounded-xl border-gray-200 sm:w-40">
-              <SelectValue placeholder="Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              {PRIORITY_OPTIONS.map((priority) => (
-                <SelectItem key={priority} value={priority}>
-                  {priority === "All" ? "All Priorities" : priority}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleResetFilters}
-            disabled={!hasActiveFilters}
-            className={cn(
-              "w-full gap-2 rounded-xl border-gray-200 text-gray-600 sm:w-auto",
-              hasActiveFilters &&
-                "border-orange-300 text-orange-600 hover:bg-orange-50",
-            )}
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reset Filters
-          </Button>
-        </SearchFilterBar>
-        {/* Table */}
-        <ProjectTable
-          projects={filteredProjects}
-          onChange={reorderProjects}
-          onEdit={handleOpenEditModal}
-          onDelete={handleDeleteProject}
-        />
+        <Button
+          type="button"
+          onClick={handleOpenCreateModal}
+          className="w-full gap-2 rounded-xl p-5 bg-orange-500 font-semibold text-white shadow-sm hover:bg-orange-600 sm:w-auto"
+        >
+          <Plus className="h-4 w-4" />
+          Create Project
+        </Button>
       </div>
+
+      {/* Filters */}
+      <SearchFilterBar>
+        <div className="relative w-full sm:max-w-xs sm:flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by project name..."
+            className="rounded-xl border-border pl-9 focus-visible:ring-orange-500"
+          />
+        </div>
+
+        <Select
+          value={statusFilter}
+          onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+        >
+          <SelectTrigger className="w-full rounded-xl border-border sm:w-40">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_OPTIONS.map((status) => (
+              <SelectItem key={status} value={status}>
+                {status === "All" ? "All Statuses" : status}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={priorityFilter}
+          onValueChange={(value) => setPriorityFilter(value as PriorityFilter)}
+        >
+          <SelectTrigger className="w-full rounded-xl border-border sm:w-40">
+            <SelectValue placeholder="Priority" />
+          </SelectTrigger>
+          <SelectContent>
+            {PRIORITY_OPTIONS.map((priority) => (
+              <SelectItem key={priority} value={priority}>
+                {priority === "All" ? "All Priorities" : priority}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleResetFilters}
+          disabled={!hasActiveFilters}
+          className={cn(
+            "w-full gap-2 rounded-xl border-border text-muted-foreground sm:w-auto",
+            hasActiveFilters &&
+              "border-orange-300 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/20",
+          )}
+        >
+          <RotateCcw className="h-4 w-4" />
+          Reset Filters
+        </Button>
+      </SearchFilterBar>
+      {/* Table */}
+      <ProjectTable
+        projects={filteredProjects}
+        onChange={reorderProjects}
+        onEdit={handleOpenEditModal}
+        onDelete={handleDeleteProject}
+      />
 
       {/* Create / Edit Modal */}
       <ProjectModal

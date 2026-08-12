@@ -2,7 +2,7 @@ import * as React from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, User, UserPlus } from "lucide-react";
+import { Mail, User, UserPlus, Camera } from "lucide-react";
 
 import { AuthShell } from "@/components/AuthShell";
 import { PasswordInput } from "@/components/PasswordInput";
@@ -17,16 +17,20 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+
 import {
   signupSchema,
   getPasswordStrength,
   type SignupFormValues,
 } from "@/lib/validations";
+
 import { authApi } from "@/lib/auth-api";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { useUsers } from "@/context/UsersContext";
 
 const STRENGTH_LABEL = ["Very weak", "Weak", "Fair", "Good", "Strong"];
+
 const STRENGTH_COLOR = [
   "bg-red-500",
   "bg-red-500",
@@ -37,14 +41,21 @@ const STRENGTH_COLOR = [
 
 export default function Signup() {
   const navigate = useNavigate();
-  const [formError, setFormError] = React.useState<string | null>(null);
+
   const { login } = useAuth();
+  const { addUser } = useUsers();
+
+  const [formError, setFormError] = React.useState<string | null>(null);
+  const [avatar, setAvatar] = React.useState<string>("");
+
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
   const {
     register,
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<SignupFormValues>({
+  } = useForm({
     resolver: zodResolver(signupSchema),
     defaultValues: {
       name: "",
@@ -60,55 +71,184 @@ export default function Signup() {
     name: "password",
     defaultValue: "",
   });
+
   const strength = getPasswordStrength(password);
+
+  /* =========================================================
+     AVATAR UPLOAD
+  ========================================================= */
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setFormError("Please select a valid image file.");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setFormError("Image size must be less than 2MB.");
+      return;
+    }
+
+    setFormError(null);
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setAvatar(reader.result);
+      }
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  /* =========================================================
+     SUBMIT
+  ========================================================= */
 
   const onSubmit = async (values: SignupFormValues) => {
     setFormError(null);
+
     try {
       const { user, token } = await authApi.signup({
         name: values.name,
         email: values.email,
         password: values.password,
       });
-      login(token);
-      navigate("/dashboard", { replace: true, state: { userId: user.id } });
+
+      /*
+       * User object for UsersContext
+       *
+       * Signup users get:
+       * Role       -> Member
+       * Department -> Development
+       * Status     -> Active
+       */
+
+      const newUser = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: "",
+        avatar:
+          avatar ||
+          `https://i.pravatar.cc/150?u=${encodeURIComponent(user.email)}`,
+        role: "Member" as const,
+        department: "Development" as const,
+        status: "Active" as const,
+        joining_date: new Date().toISOString().split("T")[0],
+        created_at: user.created_at || new Date().toISOString(),
+      };
+
+      // Save user in UsersContext
+      addUser(newUser);
+
+      // Save authenticated user
+      login(token, {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        created_at: user.created_at,
+        phone: "",
+        avatar: "",
+        role: "Member",
+        department: "Development",
+        status: "Active",
+        joining_date: "",
+      });
+
+      navigate("/dashboard", {
+        replace: true,
+        state: { userId: user.id },
+      });
     } catch (err) {
       const message =
         (err as { message?: string })?.message ??
         "Unable to create your account.";
+
       setFormError(message);
     }
   };
 
   return (
     <AuthShell
-      eyebrow="Get started"
-      headline="Create an account and ship your first project in minutes."
+      eyebrow="Project Management SaaS"
+      headline="Build better projects together."
     >
-      <Card className="border-0 bg-white shadow-xl">
-        <CardHeader className="space-y-2 pb-6">
-          <CardTitle className="text-3xl font-bold text-black">
-            Create account
-          </CardTitle>
-          <CardDescription className="text-gray-500">
+      <Card>
+        <CardHeader>
+          <CardTitle>Create account</CardTitle>
+
+          <CardDescription>
             It only takes a minute to get started.
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           {formError && <FormBanner variant="error" message={formError} />}
-
           <form
             onSubmit={handleSubmit(onSubmit)}
             noValidate
             className="space-y-5"
           >
+            {/* =====================================================
+                AVATAR
+            ===================================================== */}
+
+            <div className="flex flex-col items-center">
+              <div className="relative">
+                <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-muted">
+                  {avatar ? (
+                    <img
+                      src={avatar}
+                      alt="Profile preview"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-8 w-8 text-muted-foreground" />
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-orange-500 text-white shadow-md transition-colors hover:bg-orange-600"
+                  aria-label="Upload profile picture"
+                >
+                  <Camera className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
+
+              <p className="mt-2 text-xs text-muted-foreground">
+                Profile picture (optional)
+              </p>
+            </div>
+
+            {/* =====================================================
+                NAME
+            ===================================================== */}
+
             <div>
               <Label htmlFor="name">Full name</Label>
+
               <div className="relative mt-1.5">
                 <User
                   className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
                   aria-hidden="true"
                 />
+
                 <Input
                   id="name"
                   autoComplete="name"
@@ -117,16 +257,23 @@ export default function Signup() {
                   {...register("name")}
                 />
               </div>
+
               <FieldError message={errors.name?.message} />
             </div>
 
+            {/* =====================================================
+                EMAIL
+            ===================================================== */}
+
             <div>
               <Label htmlFor="email">Email address</Label>
+
               <div className="relative mt-1.5">
                 <Mail
                   className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
                   aria-hidden="true"
                 />
+
                 <Input
                   id="email"
                   type="email"
@@ -136,11 +283,17 @@ export default function Signup() {
                   {...register("email")}
                 />
               </div>
+
               <FieldError message={errors.email?.message} />
             </div>
 
+            {/* =====================================================
+                PASSWORD
+            ===================================================== */}
+
             <div>
               <Label htmlFor="password">Password</Label>
+
               <div className="mt-1.5">
                 <PasswordInput
                   id="password"
@@ -150,6 +303,7 @@ export default function Signup() {
                   {...register("password")}
                 />
               </div>
+
               {password.length > 0 && (
                 <div className="mt-2">
                   <div className="flex gap-1">
@@ -163,16 +317,23 @@ export default function Signup() {
                       />
                     ))}
                   </div>
+
                   <p className="mt-1 text-xs text-gray-500">
                     {STRENGTH_LABEL[strength]}
                   </p>
                 </div>
               )}
+
               <FieldError message={errors.password?.message} />
             </div>
 
+            {/* =====================================================
+                CONFIRM PASSWORD
+            ===================================================== */}
+
             <div>
               <Label htmlFor="confirmPassword">Confirm password</Label>
+
               <div className="mt-1.5">
                 <PasswordInput
                   id="confirmPassword"
@@ -182,8 +343,13 @@ export default function Signup() {
                   {...register("confirmPassword")}
                 />
               </div>
+
               <FieldError message={errors.confirmPassword?.message} />
             </div>
+
+            {/* =====================================================
+                TERMS
+            ===================================================== */}
 
             <div>
               <label className="flex cursor-pointer items-start gap-2 text-sm text-gray-700">
@@ -192,6 +358,7 @@ export default function Signup() {
                   className="mt-0.5 h-4 w-4 rounded border-gray-300 text-orange-500 focus-visible:ring-2 focus-visible:ring-orange-500/30"
                   {...register("agreeToTerms")}
                 />
+
                 <span>
                   I agree to the{" "}
                   <a
@@ -209,8 +376,13 @@ export default function Signup() {
                   </a>
                 </span>
               </label>
+
               <FieldError message={errors.agreeToTerms?.message} />
             </div>
+
+            {/* =====================================================
+                SUBMIT
+            ===================================================== */}
 
             <Button
               type="submit"

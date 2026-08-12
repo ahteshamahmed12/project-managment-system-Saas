@@ -7,18 +7,30 @@ interface StatusBadgeProps {
 
 const STATUS_STYLES: Record<string, string> = {
   // Projects
-  Active: "bg-green-100 text-green-700 border-green-200",
-  "On Hold": "bg-yellow-100 text-yellow-700 border-yellow-200",
-  Completed: "bg-blue-100 text-blue-700 border-blue-200",
+  Active:
+    "border-green-200 bg-green-100 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300",
+
+  "On Hold":
+    "border-yellow-200 bg-yellow-100 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-300",
+
+  Completed:
+    "border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300",
 
   // Users
-  Inactive: "bg-gray-100 text-gray-700 border-gray-200",
-  Suspended: "bg-red-100 text-red-700 border-red-200",
+  Inactive:
+    "border-gray-200 bg-gray-100 text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300",
 
-  // Tasks (future)
-  Pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  "In Progress": "bg-blue-100 text-blue-700 border-blue-200",
-  Done: "bg-green-100 text-green-700 border-green-200",
+  Suspended:
+    "border-red-200 bg-red-100 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300",
+
+  // Tasks
+  Pending:
+    "border-yellow-200 bg-yellow-100 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-300",
+
+  "In Progress":
+    "border-blue-200 bg-blue-100 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300",
+
+  Done: "border-green-200 bg-green-100 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300",
 };
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
@@ -27,7 +39,8 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
       variant="outline"
       className={cn(
         "rounded-full px-3 py-1 font-medium",
-        STATUS_STYLES[status] ?? "bg-gray-100 text-gray-700 border-gray-200",
+        STATUS_STYLES[status] ??
+          "border-gray-200 bg-gray-100 text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300",
       )}
     >
       {status}

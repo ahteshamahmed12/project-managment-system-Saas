@@ -16,17 +16,23 @@ export default function Pagination({
   onPageChange,
 }: PaginationProps) {
   const start = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
+
   const end = Math.min(page * pageSize, totalItems);
 
   if (totalPages <= 0) return null;
 
   return (
-    <div className="flex flex-col items-center justify-between gap-4 border-t bg-white px-6 py-4 sm:flex-row">
-      <p className="text-sm text-gray-500">
-        Showing <span className="font-medium">{start}</span> -
-        <span className="font-medium"> {end}</span> of{" "}
-        <span className="font-medium">{totalItems}</span> records
+    <div className="flex flex-col items-center justify-between gap-4 border-t border-border bg-card px-6 py-4 sm:flex-row">
+      {/* Record Information */}
+
+      <p className="text-sm text-muted-foreground">
+        Showing <span className="font-medium text-foreground">{start}</span> -{" "}
+        <span className="font-medium text-foreground">{end}</span> of{" "}
+        <span className="font-medium text-foreground">{totalItems}</span>{" "}
+        records
       </p>
+
+      {/* Pagination Controls */}
 
       <div className="flex items-center gap-2">
         <Button
@@ -38,7 +44,9 @@ export default function Pagination({
           Previous
         </Button>
 
-        {Array.from({ length: totalPages }).map((_, index) => {
+        {Array.from({
+          length: totalPages,
+        }).map((_, index) => {
           const pageNumber = index + 1;
 
           return (
@@ -48,7 +56,9 @@ export default function Pagination({
               variant={pageNumber === page ? "default" : "outline"}
               onClick={() => onPageChange(pageNumber)}
               className={
-                pageNumber === page ? "bg-orange-500 hover:bg-orange-600" : ""
+                pageNumber === page
+                  ? "bg-orange-500 text-white hover:bg-orange-600"
+                  : ""
               }
             >
               {pageNumber}

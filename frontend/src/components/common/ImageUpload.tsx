@@ -15,9 +15,9 @@ export default function ImageUpload({
   value,
   onChange,
 }: ImageUploadProps) {
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
 
-  const [preview, setPreview] = React.useState<string>(value || "");
+  const [preview, setPreview] = React.useState(value || "");
 
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -41,35 +41,52 @@ export default function ImageUpload({
     onChange(file);
   };
 
+  const handleRemove = () => {
+    setPreview("");
+    onChange(null);
+
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  };
+
   return (
     <div className="space-y-3">
-      <label className="text-sm font-medium">{label}</label>
+      {/* Label */}
+
+      <label className="text-sm font-medium text-foreground">{label}</label>
+
+      {/* Upload Area */}
 
       <div
         onClick={() => inputRef.current?.click()}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault();
-          handleFile(e.dataTransfer.files[0]);
+        onDragOver={(event) => {
+          event.preventDefault();
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          handleFile(event.dataTransfer.files[0] ?? null);
         }}
         className={cn(
-          "flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 transition",
-          "hover:border-orange-400 hover:bg-orange-50",
+          "flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/40 p-6 transition",
+          "hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/20",
         )}
       >
         {preview ? (
           <img
             src={preview}
-            alt="preview"
+            alt="Preview"
             className="h-40 w-full rounded-xl object-cover"
           />
         ) : (
           <>
-            <ImageIcon className="mb-3 h-10 w-10 text-gray-400" />
+            <ImageIcon className="mb-3 h-10 w-10 text-muted-foreground" />
 
-            <p className="font-medium">Drag & Drop image here</p>
+            <p className="font-medium text-foreground">
+              Drag & Drop image here
+            </p>
 
-            <p className="text-sm text-gray-500">or click to browse</p>
+            <p className="text-sm text-muted-foreground">or click to browse</p>
           </>
         )}
 
@@ -78,11 +95,15 @@ export default function ImageUpload({
           hidden
           type="file"
           accept="image/*"
-          onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+          onChange={(event) => {
+            handleFile(event.target.files?.[0] ?? null);
+          }}
         />
       </div>
 
-      <div className="flex gap-2">
+      {/* Actions */}
+
+      <div className="flex flex-wrap gap-2">
         <Button
           type="button"
           variant="outline"
@@ -93,18 +114,7 @@ export default function ImageUpload({
         </Button>
 
         {preview && (
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => {
-              setPreview("");
-              onChange(null);
-
-              if (inputRef.current) {
-                inputRef.current.value = "";
-              }
-            }}
-          >
+          <Button type="button" variant="destructive" onClick={handleRemove}>
             <Trash2 className="mr-2 h-4 w-4" />
             Remove
           </Button>

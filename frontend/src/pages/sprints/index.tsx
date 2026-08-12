@@ -205,9 +205,9 @@ export default function SprintsPage() {
 
       <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Sprints</h1>
+          <h1 className="text-3xl font-bold text-foreground">Sprints</h1>
 
-          <p className="mt-1 text-gray-500">
+          <p className="mt-1 text-muted-foreground">
             Plan, manage and track project sprints.
           </p>
         </div>
@@ -237,7 +237,7 @@ export default function SprintsPage() {
             value={searchTerm}
             placeholder="Search sprint..."
             onChange={(event) => setSearchTerm(event.target.value)}
-            className="rounded-xl border-gray-200 pl-9 focus-visible:ring-orange-500"
+            className="rounded-xl border-border pl-9 focus-visible:ring-orange-500"
           />
         </div>
 
@@ -247,7 +247,7 @@ export default function SprintsPage() {
           value={projectFilter}
           onValueChange={(value) => setProjectFilter(value)}
         >
-          <SelectTrigger className="w-full rounded-xl border-gray-200 sm:w-48">
+          <SelectTrigger className="w-full rounded-xl border-border sm:w-48">
             <SelectValue placeholder="Project" />
           </SelectTrigger>
 
@@ -266,7 +266,7 @@ export default function SprintsPage() {
           value={statusFilter}
           onValueChange={(value) => setStatusFilter(value as StatusFilter)}
         >
-          <SelectTrigger className="w-full rounded-xl border-gray-200 sm:w-40">
+          <SelectTrigger className="w-full rounded-xl border-border sm:w-40">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
 
@@ -287,7 +287,7 @@ export default function SprintsPage() {
           disabled={!hasActiveFilters}
           onClick={handleResetFilters}
           className={
-            "w-full gap-2 rounded-xl border-gray-200 text-gray-600 sm:w-auto " +
+            "w-full gap-2 rounded-xl border-border text-muted-foreground sm:w-auto " +
             (hasActiveFilters
               ? "border-orange-300 text-orange-600 hover:bg-orange-50"
               : "")

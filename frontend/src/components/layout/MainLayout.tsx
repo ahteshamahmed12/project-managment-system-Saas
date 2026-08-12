@@ -8,7 +8,7 @@ export default function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F5EFE7]">
+    <div className="py-4 bg-background text-foreground">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
@@ -18,7 +18,7 @@ export default function MainLayout() {
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Page Content */}
-        <main className="px-4 py-4 md:px-6 lg:px-8">
+        <main className="min-h-[calc(100vh-4rem)] px-4 py-4 md:px-6 lg:px-8">
           <Outlet />
         </main>
       </div>

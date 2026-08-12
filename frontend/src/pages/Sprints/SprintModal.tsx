@@ -6,8 +6,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-import type { Sprint } from "./sprintData";
 import SprintForm from "./SprintForm";
+import type { Sprint } from "./sprintData";
 
 interface SprintModalProps {
   open: boolean;
@@ -35,11 +35,11 @@ export default function SprintModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto rounded-2xl sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-gray-900">
+          <DialogTitle className="text-xl font-semibold text-foreground">
             {sprint ? "Edit Sprint" : "Create Sprint"}
           </DialogTitle>
 
-          <DialogDescription className="text-gray-500">
+          <DialogDescription className="text-muted-foreground">
             {sprint
               ? "Update the sprint details below."
               : "Create a new sprint and define its goals."}

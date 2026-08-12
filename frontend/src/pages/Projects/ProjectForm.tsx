@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import type { Project } from "./projectData";
+import FileUpload from "@/components/common/FileUpload";
 
 interface ProjectFormProps {
   initialData?: Project | null;
@@ -42,6 +43,7 @@ export default function ProjectForm({
         description: "",
         status: "Active",
         priority: "Medium",
+        attachments: [],
         start_date: "",
         end_date: "",
         created_by: "Admin",
@@ -144,7 +146,6 @@ export default function ProjectForm({
           placeholder="Enter project name"
         />
       </div>
-
       {/* Project Image - Drag & Drop Upload */}
       <div>
         <Label>Project Image</Label>
@@ -158,31 +159,34 @@ export default function ProjectForm({
         />
 
         {form.project_image ? (
-          <div className="relative mt-2 flex items-center gap-4 rounded-2xl border border-gray-200 bg-gray-50 p-3">
+          <div className="relative mt-2 flex items-center gap-4 rounded-2xl border border-border bg-muted/40 p-3">
             <img
               src={form.project_image}
               alt="Project preview"
-              className="h-16 w-16 shrink-0 rounded-xl border border-gray-200 object-cover"
+              className="h-16 w-16 shrink-0 rounded-xl border border-border object-cover"
             />
+
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-gray-700">
+              <p className="truncate text-sm font-medium text-foreground">
                 Image selected
               </p>
+
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="text-xs font-medium text-orange-600 hover:underline"
+                className="text-xs font-medium text-orange-600 hover:underline dark:text-orange-400"
               >
                 Replace image
               </button>
             </div>
+
             <Button
               type="button"
               variant="ghost"
               size="icon"
               onClick={handleRemoveImage}
               aria-label="Remove image"
-              className="h-8 w-8 shrink-0 rounded-lg text-gray-400 hover:bg-red-100 hover:text-red-600"
+              className="h-8 w-8 shrink-0 rounded-lg text-muted-foreground hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950/30"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -201,16 +205,18 @@ export default function ProjectForm({
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             className={cn(
-              "mt-2 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center transition-colors",
+              "mt-2 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-muted/40 px-4 py-8 text-center transition-colors",
               isDragging
-                ? "border-orange-500 bg-orange-50"
-                : "hover:border-orange-400 hover:bg-orange-50/60",
+                ? "border-orange-500 bg-orange-50 dark:bg-orange-950/30"
+                : "hover:border-orange-400 hover:bg-orange-50/60 dark:hover:bg-orange-950/20",
             )}
           >
             <div
               className={cn(
-                "flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-sm",
-                isDragging ? "text-orange-600" : "text-gray-400",
+                "flex h-11 w-11 items-center justify-center rounded-2xl bg-card shadow-sm",
+                isDragging
+                  ? "text-orange-600 dark:text-orange-400"
+                  : "text-muted-foreground",
               )}
             >
               {isDragging ? (
@@ -219,20 +225,23 @@ export default function ProjectForm({
                 <ImagePlus className="h-5 w-5" />
               )}
             </div>
-            <p className="text-sm font-medium text-gray-700">
+
+            <p className="text-sm font-medium text-foreground">
               {isDragging ? "Drop image here" : "Drag & drop image here"}
             </p>
-            <p className="text-xs text-gray-400">
+
+            <p className="text-xs text-muted-foreground">
               or click to browse (PNG, JPG, WEBP up to {MAX_IMAGE_SIZE_MB}MB)
             </p>
           </div>
         )}
 
         {imageError && (
-          <p className="mt-2 text-xs font-medium text-red-600">{imageError}</p>
+          <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
+            {imageError}
+          </p>
         )}
       </div>
-
       {/* Description */}
       <div>
         <Label>Description</Label>
@@ -244,7 +253,6 @@ export default function ProjectForm({
           rows={4}
         />
       </div>
-
       {/* Status & Priority */}
       <div className="grid gap-4 md:grid-cols-2">
         <div>
@@ -293,9 +301,8 @@ export default function ProjectForm({
           </Select>
         </div>
       </div>
-
       {/* Dates */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2">
         <div>
           <Label>Start Date</Label>
           <Input
@@ -303,6 +310,7 @@ export default function ProjectForm({
             name="start_date"
             value={form.start_date}
             onChange={handleChange}
+            className="scheme-light dark:scheme-dark"
           />
         </div>
 
@@ -313,10 +321,24 @@ export default function ProjectForm({
             name="end_date"
             value={form.end_date}
             onChange={handleChange}
+            className="scheme-light dark:scheme-dark"
           />
         </div>
       </div>
+      {/* Attachments */}
+      <div className="space-y-2">
+        <Label>Attachments</Label>
 
+        <FileUpload
+          value={form.attachments}
+          onChange={(attachments) =>
+            setForm((prev) => ({
+              ...prev,
+              attachments,
+            }))
+          }
+        />
+      </div>
       {/* Buttons */}
       <div className="flex justify-end gap-3 pt-3">
         <Button type="button" variant="outline" onClick={onCancel}>

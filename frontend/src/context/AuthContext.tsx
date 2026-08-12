@@ -1,14 +1,34 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
+import type { User } from "@/pages/users/userData";
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (token: string) => void;
+  user: User | null;
+  login: (token: string, user: User) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    const storedUser = localStorage.getItem("current_user");
+
+    if (!storedUser) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(storedUser) as User;
+    } catch {
+      return null;
+    }
+  });
+
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     if (typeof window === "undefined") {
       return false;
@@ -17,14 +37,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return !!localStorage.getItem("auth_token");
   });
 
-  const login = (token: string) => {
+  const login = (token: string, user: User) => {
     localStorage.setItem("auth_token", token);
+    localStorage.setItem("current_user", JSON.stringify(user));
+
+    setCurrentUser(user);
     setIsAuthenticated(true);
   };
 
   const logout = () => {
     localStorage.removeItem("auth_token");
     localStorage.removeItem("current_user");
+
+    setCurrentUser(null);
     setIsAuthenticated(false);
   };
 
@@ -32,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         isAuthenticated,
+        user: currentUser,
         login,
         logout,
       }}

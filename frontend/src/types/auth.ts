@@ -1,9 +1,4 @@
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  createdAt: string;
-}
+import type { User } from "@/pages/users/userData";
 
 export interface AuthResponse {
   user: User;
@@ -24,6 +19,11 @@ export interface SignupPayload {
 export interface UpdateProfilePayload {
   name?: string;
   email?: string;
+  phone?: string;
+  avatar?: string;
+  role?: User["role"];
+  department?: User["department"];
+  status?: User["status"];
 }
 
 export interface ForgotPasswordPayload {

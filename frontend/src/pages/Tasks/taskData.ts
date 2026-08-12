@@ -1,3 +1,5 @@
+import type { TaskAttachment } from "@/components/common/FileUpload";
+
 export type TaskStatus = "Todo" | "In Progress" | "Review" | "Completed";
 
 export type TaskPriority = "Low" | "Medium" | "High";
@@ -14,6 +16,7 @@ export interface Task {
   due_date: string;
   created_by: string;
   created_at: string;
+  attachments: TaskAttachment[];
 }
 
 export const taskData: Task[] = [
@@ -29,6 +32,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-05",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -42,6 +46,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-08",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -55,6 +60,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-12",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -68,6 +74,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-15",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -81,6 +88,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-18",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -94,6 +102,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-16",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -107,6 +116,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-19",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -120,6 +130,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-20",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -133,6 +144,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-22",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -146,6 +158,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-23",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -159,6 +172,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-25",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -172,6 +186,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-26",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -185,6 +200,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-27",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -198,6 +214,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-28",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -211,6 +228,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-29",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -224,6 +242,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-30",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -237,6 +256,7 @@ export const taskData: Task[] = [
     due_date: "2025-01-31",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -250,6 +270,7 @@ export const taskData: Task[] = [
     due_date: "2025-02-02",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -263,6 +284,7 @@ export const taskData: Task[] = [
     due_date: "2025-02-03",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
   {
     id: crypto.randomUUID(),
@@ -276,5 +298,6 @@ export const taskData: Task[] = [
     due_date: "2025-02-05",
     created_by: "Admin",
     created_at: new Date().toISOString(),
+    attachments: [],
   },
 ];

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 
 import type { Task } from "./taskData";
+import FileUpload from "@/components/common/FileUpload";
 
 interface TaskFormProps {
   initialData?: Task | null;
@@ -33,6 +34,7 @@ const createDefaultTask = (): Task => ({
   due_date: "",
   created_by: "Admin",
   created_at: new Date().toISOString(),
+  attachments: [],
 });
 
 export default function TaskForm({
@@ -179,6 +181,7 @@ export default function TaskForm({
             name="start_date"
             value={form.start_date}
             onChange={handleInputChange}
+            className="scheme-light dark:scheme-dark"
           />
         </div>
 
@@ -190,10 +193,25 @@ export default function TaskForm({
             name="due_date"
             value={form.due_date}
             onChange={handleInputChange}
+            className="scheme-light dark:scheme-dark"
           />
         </div>
       </div>
+      {/* Attachments */}
 
+      <div className="space-y-2">
+        <Label>Attachments</Label>
+
+        <FileUpload
+          value={form.attachments}
+          onChange={(attachments) =>
+            setForm((prev) => ({
+              ...prev,
+              attachments,
+            }))
+          }
+        />
+      </div>
       {/* Buttons */}
 
       <div className="flex justify-end gap-3 pt-2">

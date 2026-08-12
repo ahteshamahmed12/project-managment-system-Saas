@@ -1,8 +1,12 @@
 import * as React from "react";
-import { Plus, Search, RotateCcw, Users } from "lucide-react";
+import { Plus, Search, RotateCcw } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useUsers } from "@/context/UsersContext";
+
 import DeleteConfirm from "@/components/common/DeleteConfirm";
+import SearchFilterBar from "@/components/common/SearchFilterBar";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,8 +20,8 @@ import {
 import UserTable from "./UserTable";
 import UserModal from "./UserModal";
 
-import { userData, type User } from "./userData";
-import SearchFilterBar from "@/components/common/SearchFilterBar";
+import type { User } from "./userData";
+
 type StatusFilter = "All" | User["status"];
 type RoleFilter = "All" | User["role"];
 
@@ -30,14 +34,22 @@ const STATUS_OPTIONS: StatusFilter[] = [
   "Suspended",
 ];
 
-const ROLE_OPTIONS: RoleFilter[] = ["All", "Admin", "Manager", "Member"];
+const ROLE_OPTIONS: RoleFilter[] = [
+  "All",
+  "Admin",
+  "Manager",
+  "Team Lead",
+  "Developer",
+  "QA",
+  "Designer",
+  "Member",
+];
+
 export default function UsersPage() {
-  const [users, setUsers] = React.useState<User[]>(userData);
+  const { users, addUser, updateUser, deleteUser } = useUsers();
 
   const [search, setSearch] = React.useState("");
-
   const [status, setStatus] = React.useState<StatusFilter>("All");
-
   const [role, setRole] = React.useState<RoleFilter>("All");
 
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
@@ -46,12 +58,15 @@ export default function UsersPage() {
   const [deleteOpen, setDeleteOpen] = React.useState(false);
 
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
+
   const filteredUsers = React.useMemo(() => {
     return users.filter((user) => {
+      const searchValue = search.toLowerCase();
+
       const matchesSearch =
         search === "" ||
-        user.name.toLowerCase().includes(search.toLowerCase()) ||
-        user.email.toLowerCase().includes(search.toLowerCase());
+        user.name.toLowerCase().includes(searchValue) ||
+        user.email.toLowerCase().includes(searchValue);
 
       const matchesStatus = status === "All" || user.status === status;
 
@@ -60,6 +75,7 @@ export default function UsersPage() {
       return matchesSearch && matchesStatus && matchesRole;
     });
   }, [users, search, status, role]);
+
   const handleCreate = () => {
     setEditingUser(null);
     setModalOpen(true);
@@ -74,64 +90,47 @@ export default function UsersPage() {
     setSelectedUser(user);
     setDeleteOpen(true);
   }, []);
+
   const confirmDelete = React.useCallback(() => {
     if (!selectedUser) return;
 
-    setUsers((prev) => prev.filter((u) => u.id !== selectedUser.id));
+    deleteUser(selectedUser.id);
 
     setSelectedUser(null);
     setDeleteOpen(false);
-
-    // TODO:
-    // await userApi.delete(selectedUser.id)
-  }, [selectedUser]);
+  }, [selectedUser, deleteUser]);
 
   const handleSave = (values: UserFormValues) => {
     if (editingUser) {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === editingUser.id
-            ? {
-                ...u,
-                ...values,
-              }
-            : u,
-        ),
-      );
+      updateUser(editingUser.id, values);
     } else {
-      setUsers((prev) => [
-        {
-          id: crypto.randomUUID(),
-          created_at: new Date().toISOString(),
-          ...values,
-        },
-        ...prev,
-      ]);
+      addUser({
+        id: crypto.randomUUID(),
+        created_at: new Date().toISOString(),
+        ...values,
+      });
     }
 
     setModalOpen(false);
     setEditingUser(null);
   };
+
   return (
     <div className="space-y-6">
       {/* Header */}
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-orange-500 p-3 text-white">
-            <Users className="h-6 w-6" />
-          </div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Users</h1>
 
-          <div>
-            <h1 className="text-2xl font-bold">Users</h1>
-
-            <p className="text-sm text-gray-500">Manage your team members.</p>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Manage your team members.
+          </p>
         </div>
 
         <Button
           onClick={handleCreate}
-          className="bg-orange-500 hover:bg-orange-600"
+          className="bg-orange-500 text-white hover:bg-orange-600"
         >
           <Plus className="mr-2 h-4 w-4" />
           Create User
@@ -139,24 +138,25 @@ export default function UsersPage() {
       </div>
 
       {/* Filters */}
+
       <SearchFilterBar>
         <div className="relative w-full sm:max-w-xs sm:flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
           <Input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name or email..."
-            className="rounded-xl border-gray-200 pl-9 focus-visible:ring-orange-500"
+            className="rounded-xl border-border bg-background pl-9 focus-visible:ring-orange-500"
           />
         </div>
 
         <Select
           value={status}
-          onValueChange={(v) => setStatus(v as StatusFilter)}
+          onValueChange={(value) => setStatus(value as StatusFilter)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="border-border bg-background">
             <SelectValue />
           </SelectTrigger>
 
@@ -169,8 +169,11 @@ export default function UsersPage() {
           </SelectContent>
         </Select>
 
-        <Select value={role} onValueChange={(v) => setRole(v as RoleFilter)}>
-          <SelectTrigger>
+        <Select
+          value={role}
+          onValueChange={(value) => setRole(value as RoleFilter)}
+        >
+          <SelectTrigger className="border-border bg-background">
             <SelectValue />
           </SelectTrigger>
 
@@ -191,21 +194,25 @@ export default function UsersPage() {
             setStatus("All");
           }}
           className={cn(
-            "gap-2",
+            "gap-2 border-border text-muted-foreground",
             (search || role !== "All" || status !== "All") &&
-              "border-orange-300 text-orange-600",
+              "border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-400 dark:hover:bg-orange-950",
           )}
         >
           <RotateCcw className="h-4 w-4" />
           Reset
         </Button>
       </SearchFilterBar>
+
+      {/* Table */}
+
       <UserTable
         users={filteredUsers}
-        onChange={setUsers}
         onEdit={handleEdit}
         onDelete={handleDeleteUser}
       />
+
+      {/* User Modal */}
 
       <UserModal
         open={modalOpen}
@@ -213,6 +220,9 @@ export default function UsersPage() {
         user={editingUser}
         onSave={handleSave}
       />
+
+      {/* Delete Confirmation */}
+
       <DeleteConfirm
         open={deleteOpen}
         onOpenChange={setDeleteOpen}

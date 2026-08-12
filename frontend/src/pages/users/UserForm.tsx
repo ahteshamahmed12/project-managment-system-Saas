@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import type { User, UserRole, UserDepartment, UserStatus } from "@/pages/users/userData";
+import type { User, UserRole, UserDepartment, UserStatus } from "./userData";
 
 interface UserFormProps {
   initialData?: User | null;
@@ -110,17 +110,15 @@ export default function UserForm({
       className="space-y-6"
     >
       {/* Avatar Upload */}
-
       <div>
         <Label className="mb-2 block">Profile Picture</Label>
 
         <div
           {...getRootProps()}
-          className={`cursor-pointer rounded-2xl border-2 border-dashed p-6 transition
-          ${
+          className={`cursor-pointer rounded-2xl border-2 border-dashed p-6 transition-colors ${
             isDragActive
-              ? "border-orange-500 bg-orange-50"
-              : "border-gray-300 hover:border-orange-400"
+              ? "border-orange-500 bg-orange-50 dark:border-orange-400 dark:bg-orange-950/30"
+              : "border-border bg-background hover:border-orange-400 hover:bg-muted/50"
           }`}
         >
           <input {...getInputProps()} />
@@ -130,7 +128,7 @@ export default function UserForm({
               <img
                 src={form.avatar}
                 alt="avatar"
-                className="h-28 w-28 rounded-full border object-cover shadow"
+                className="h-28 w-28 rounded-full border border-border object-cover shadow"
               />
 
               <Button
@@ -151,9 +149,13 @@ export default function UserForm({
               <Upload className="h-12 w-12 text-orange-500" />
 
               <div>
-                <p className="font-medium">Drag & Drop Avatar</p>
+                <p className="font-medium text-foreground">
+                  Drag & Drop Avatar
+                </p>
 
-                <p className="text-sm text-gray-500">or click here to upload</p>
+                <p className="text-sm text-muted-foreground">
+                  or click here to upload
+                </p>
               </div>
             </div>
           )}
@@ -161,7 +163,6 @@ export default function UserForm({
       </div>
 
       {/* Name */}
-
       <div>
         <Label>Name</Label>
 
@@ -170,11 +171,11 @@ export default function UserForm({
           value={form.name}
           onChange={handleChange}
           placeholder="Enter full name"
+          className="bg-background"
         />
       </div>
 
       {/* Email */}
-
       <div>
         <Label>Email</Label>
 
@@ -184,11 +185,11 @@ export default function UserForm({
           value={form.email}
           onChange={handleChange}
           placeholder="example@email.com"
+          className="bg-background"
         />
       </div>
 
       {/* Phone */}
-
       <div>
         <Label>Phone</Label>
 
@@ -197,10 +198,11 @@ export default function UserForm({
           value={form.phone}
           onChange={handleChange}
           placeholder="+92 300 1234567"
+          className="bg-background"
         />
       </div>
-      {/* Role & Department */}
 
+      {/* Role & Department */}
       <div className="grid gap-5 md:grid-cols-2">
         <div>
           <Label>Role</Label>
@@ -214,7 +216,7 @@ export default function UserForm({
               }))
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-background">
               <SelectValue />
             </SelectTrigger>
 
@@ -240,7 +242,7 @@ export default function UserForm({
               }))
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-background">
               <SelectValue />
             </SelectTrigger>
 
@@ -256,7 +258,6 @@ export default function UserForm({
       </div>
 
       {/* Status & Joining Date */}
-
       <div className="grid gap-5 md:grid-cols-2">
         <div>
           <Label>Status</Label>
@@ -270,7 +271,7 @@ export default function UserForm({
               }))
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-background">
               <SelectValue />
             </SelectTrigger>
 
@@ -292,18 +293,21 @@ export default function UserForm({
             name="joining_date"
             value={form.joining_date}
             onChange={handleChange}
+            className="scheme-light dark:scheme-dark"
           />
         </div>
       </div>
 
       {/* Footer */}
-
-      <div className="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end">
+      <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
 
-        <Button type="submit" className="bg-orange-500 hover:bg-orange-600">
+        <Button
+          type="submit"
+          className="bg-orange-500 text-white hover:bg-orange-600"
+        >
           {initialData ? "Update User" : "Create User"}
         </Button>
       </div>

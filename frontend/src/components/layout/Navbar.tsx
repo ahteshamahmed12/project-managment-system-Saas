@@ -1,8 +1,14 @@
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Search, ChevronDown, Menu } from "lucide-react";
+
+import { Search, ChevronDown, Menu } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useLocation } from "react-router-dom";
+
+import ThemeToggle from "@/components/theme/ThemeToggle";
+import NotificationDropdown from "@/pages/Notifications/NotificationDropdown";
+
+import { useAuth } from "@/context/AuthContext";
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -10,6 +16,12 @@ interface NavbarProps {
 
 export default function Navbar({ onMenuClick }: NavbarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  /* =========================================================
+     PAGE TITLES
+  ========================================================= */
 
   const pageTitles: Record<string, string> = {
     "/": "Dashboard",
@@ -21,66 +33,112 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     "/users": "Users",
     "/reports": "Reports",
     "/settings": "Settings",
+    "/profile": "Profile",
+    "/notifications": "Notifications",
   };
 
   const title = pageTitles[location.pathname] ?? "Dashboard";
 
+  /* =========================================================
+     USER DISPLAY
+  ========================================================= */
+
+  const userName = user?.name ?? "User";
+  const userEmail = user?.email ?? "";
+
+  const userInitials =
+    userName
+      .split(" ")
+      .map((part: string) => part.charAt(0))
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "U";
+
   return (
-    <header className="flex items-center justify-between gap-4 border-b bg-[#F5EFE7] px-4 py-4 md:px-6 lg:px-8">
-      {/* Left */}
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+    <header className="flex min-w-0 items-center justify-between gap-3 px-6">
+      {/* =====================================================
+          LEFT
+      ===================================================== */}
+
+      <div className="flex min-w-0 items-center gap-2">
         {/* Mobile Menu */}
+
         <Button
+          type="button"
           variant="ghost"
           size="icon"
           onClick={onMenuClick}
-          className="lg:hidden"
+          className="shrink-0 rounded-xl lg:hidden"
+          aria-label="Open menu"
         >
-          <Menu className="h-6 w-6" />
+          <Menu className="h-5 w-5 text-foreground" />
         </Button>
 
         <div className="min-w-0">
-          <h1 className="truncate text-lg font-bold text-black sm:text-xl md:text-2xl lg:text-3xl">
+          <h1 className="truncate text-lg font-bold text-foreground sm:text-xl md:text-2xl lg:text-3xl">
             {title}
           </h1>
         </div>
       </div>
 
-      {/* Search */}
+      {/* =====================================================
+          SEARCH
+      ===================================================== */}
+
       <div className="hidden flex-1 px-4 md:block">
         <div className="relative mx-auto max-w-xl">
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
           <Input
             placeholder="Search..."
-            className="rounded-full border-0 bg-white pl-11 shadow-sm"
+            className="rounded-full border-border bg-card pl-11 shadow-sm"
           />
         </div>
       </div>
 
-      {/* Right */}
+      {/* =====================================================
+          RIGHT
+      ===================================================== */}
+
       <div className="ml-2 flex shrink-0 items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full bg-white shadow-sm"
-        >
-          <Bell className="h-5 w-5" />
-        </Button>
+        {/* Theme Toggle */}
 
-        <div className="flex items-center gap-2 rounded-full bg-white px-2 py-1 shadow-sm md:px-3 md:py-2">
-          <Avatar className="h-9 w-9">
-            <AvatarImage src="https://i.pravatar.cc/100?img=12" />
-            <AvatarFallback>AM</AvatarFallback>
-          </Avatar>
+        <ThemeToggle />
 
-          <div className="hidden text-left md:block">
-            <p className="text-sm font-semibold">Alex Meian</p>
+        {/* Notifications */}
 
-            <p className="text-xs text-gray-500">Product Manager</p>
-          </div>
+        <NotificationDropdown />
 
-          <ChevronDown className="hidden h-4 w-4 text-gray-400 md:block" />
+        {/* User */}
+
+        <div className="">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => navigate("/profile")}
+            className="flex h-auto items-center gap-2 rounded-full border border-border bg-card px-2 py-1 shadow-sm hover:bg-accent md:px-3 md:py-2"
+            aria-label="Open profile"
+          >
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={user?.avatar} alt={userName} />
+
+              <AvatarFallback className="bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+
+            <div className="hidden min-w-0 text-left md:block">
+              <p className="max-w-32 truncate text-sm font-semibold text-foreground">
+                {userName}
+              </p>
+
+              <p className="max-w-32 truncate text-xs text-muted-foreground">
+                {userEmail}
+              </p>
+            </div>
+
+            <ChevronDown className="hidden h-4 w-4 shrink-0 text-muted-foreground md:block" />
+          </Button>
         </div>
       </div>
     </header>
