@@ -8,7 +8,8 @@ from database import init_db
 from routes.auth import router as auth_router
 from routes.role import router as roles_router
 from routes.user import router as users_router
-from routes.project import router as projects_router
+
+from app.websocket.routes import router as websocket_router
 
 
 @asynccontextmanager
@@ -56,10 +57,9 @@ app.include_router(
 )
 
 
-# Projects
+# WebSocket
 app.include_router(
-    projects_router,
-    prefix="/api",
+    websocket_router,
 )
 
 
