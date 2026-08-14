@@ -1,28 +1,22 @@
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    create_async_engine,
-    async_sessionmaker,
-)
+from collections.abc import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
+
 from config import settings
 
 
-# PostgreSQL Async Engine
 engine = create_async_engine(
     settings.database_url,
-    echo=True,          # Set to False in production
-    
+    echo=False,
+    pool_pre_ping=True,
 )
+
 
 class Base(DeclarativeBase):
     pass
 
-async def init_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
 
-
-# Session Factory
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
@@ -30,7 +24,17 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
-# Dependency for FastAPI
-async def get_db():
+async def init_db() -> None:
+    # Import models before create_all so their metadata is registered.
+    import models.role  # noqa: F401
+    import models.user  # noqa: F401
+    import models.sprints  # noqa: F401
+    import models.tasks  # noqa: F401
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         yield session
