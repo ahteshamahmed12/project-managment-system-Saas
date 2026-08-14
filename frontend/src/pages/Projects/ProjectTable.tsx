@@ -39,9 +39,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Pagination from "@/components/common/Pagination";
 import StatusBadge from "@/components/common/StatusBadge";
-
 const PAGE_SIZE = 8;
-
 /* =========================================================
    TYPES
 ========================================================= */
@@ -291,25 +289,32 @@ function EmptyState(): React.JSX.Element {
 }
 
 /* =========================================================
-   SENSORS CONFIGURATION (Extracted to avoid hook issues)
+   MAIN COMPONENT
 ========================================================= */
 
-function ProjectTableContent({
+export function ProjectTable({
   projects,
   onChange,
   onEdit,
   onDelete,
-  sensors,
-}: ProjectTableProps & { sensors: ReturnType<typeof useSensors> }): React.JSX.Element {
+}: ProjectTableProps): React.JSX.Element {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
   const [page, setPage] = React.useState(1);
   const totalPages = Math.max(1, Math.ceil(projects.length / PAGE_SIZE));
 
   const currentPage = Math.min(page, totalPages);
   const paginatedProjects = React.useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
+
     return projects.slice(start, start + PAGE_SIZE);
   }, [projects, currentPage]);
-
   const handleDragEnd = React.useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
@@ -385,42 +390,11 @@ function ProjectTableContent({
       <Pagination
         page={currentPage}
         totalPages={totalPages}
-        totalItems={projects.length}
+        totalItems={projects.length} // UserTable me users.length
         pageSize={PAGE_SIZE}
         onPageChange={setPage}
       />
     </div>
-  );
-}
-
-/* =========================================================
-   MAIN COMPONENT
-========================================================= */
-
-export function ProjectTable({
-  projects,
-  onChange,
-  onEdit,
-  onDelete,
-}: ProjectTableProps): React.JSX.Element {
-  // Initialize sensors at the top level of the main component
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 6 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
-
-  return (
-    <ProjectTableContent
-      projects={projects}
-      onChange={onChange}
-      onEdit={onEdit}
-      onDelete={onDelete}
-      sensors={sensors}
-    />
   );
 }
 

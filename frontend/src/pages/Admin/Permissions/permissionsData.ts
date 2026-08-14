@@ -1,208 +1,213 @@
-export type PermissionAction = "view" | "create" | "edit" | "delete" | "manage";
+export type PermissionKey =
+  | "auditing"
+  | "allocateAuthority"
+  | "candidateActivation"
+  | "candidateDocuments"
+  | "financialInformation"
+  | "jobPosting"
+  | "candidateManagement"
+  | "userManagement"
+  | "reporting"
+  | "settings";
 
-export interface PermissionModule {
+export interface Permission {
+  key: PermissionKey;
+  label: string;
+  description: string;
+  enabled: boolean;
+}
+
+export interface PermissionUser {
   id: string;
   name: string;
-  description: string;
-  actions: PermissionAction[];
+  email: string;
+  avatar?: string;
+  role: string;
+  status: "Active" | "Inactive" | "Suspended";
+  permissions: Permission[];
 }
 
-export interface RolePermission {
-  moduleId: string;
-  permissions: PermissionAction[];
-}
+/* ==========================================================
+   PERMISSION MODULES
+========================================================== */
 
-export interface Role {
-  id: string;
-  name: string;
-  description: string;
-  usersCount: number;
-  permissions: RolePermission[];
-}
-
-export const permissionModules: PermissionModule[] = [
+export const permissionModules: Omit<Permission, "enabled">[] = [
   {
-    id: "dashboard",
-    name: "Dashboard",
-    description: "Access dashboard and system overview.",
-    actions: ["view"],
+    key: "auditing",
+    label: "Auditing",
+    description: "Allows the user to access and manage auditing information.",
   },
   {
-    id: "projects",
-    name: "Projects",
-    description: "Create and manage projects.",
-    actions: ["view", "create", "edit", "delete"],
+    key: "allocateAuthority",
+    label: "Allocate as authority",
+    description: "Allows the user to allocate authority to other users.",
   },
   {
-    id: "tasks",
-    name: "Tasks",
-    description: "Manage project tasks and assignments.",
-    actions: ["view", "create", "edit", "delete"],
+    key: "candidateActivation",
+    label: "Candidate activation",
+    description: "Allows the user to activate or deactivate candidates.",
   },
   {
-    id: "sprints",
-    name: "Sprints",
-    description: "Manage project sprints and progress.",
-    actions: ["view", "create", "edit", "delete"],
+    key: "candidateDocuments",
+    label: "Candidate documents",
+    description: "Allows the user to view and manage candidate documents.",
   },
   {
-    id: "users",
-    name: "Users",
-    description: "Manage users and user accounts.",
-    actions: ["view", "create", "edit", "delete"],
+    key: "financialInformation",
+    label: "Financial information",
+    description: "Allows the user to access financial information.",
   },
   {
-    id: "team-management",
-    name: "Team Management",
-    description: "Manage teams and team members.",
-    actions: ["view", "create", "edit", "delete"],
+    key: "jobPosting",
+    label: "Job posting",
+    description: "Allows the user to create and manage job postings.",
   },
   {
-    id: "reports",
-    name: "Reports",
-    description: "View and manage project reports.",
-    actions: ["view", "create", "manage"],
+    key: "candidateManagement",
+    label: "Candidate management",
+    description: "Allows the user to manage candidate records.",
   },
   {
-    id: "settings",
-    name: "Settings",
-    description: "Manage application settings.",
-    actions: ["view", "edit", "manage"],
+    key: "userManagement",
+    label: "User management",
+    description: "Allows the user to manage system users.",
+  },
+  {
+    key: "reporting",
+    label: "Reporting",
+    description: "Allows the user to access reports and analytics.",
+  },
+  {
+    key: "settings",
+    label: "Settings",
+    description: "Allows the user to access application settings.",
   },
 ];
 
-export const roles: Role[] = [
+/* ==========================================================
+   HELPERS
+========================================================== */
+
+export const createPermissions = (
+  enabledPermissions: PermissionKey[],
+): Permission[] => {
+  return permissionModules.map((permission) => ({
+    ...permission,
+    enabled: enabledPermissions.includes(permission.key),
+  }));
+};
+
+/* ==========================================================
+   USERS
+========================================================== */
+
+export const permissionUsers: PermissionUser[] = [
   {
-    id: "admin",
-    name: "Admin",
-    description: "Full access to the entire system.",
-    usersCount: 2,
-    permissions: permissionModules.map((module) => ({
-      moduleId: module.id,
-      permissions: [...module.actions],
-    })),
+    id: "user-001",
+    name: "Arlene McCoy",
+    email: "arlene.mccoy@example.com",
+    role: "Consultant",
+    status: "Active",
+
+    permissions: createPermissions([
+      "auditing",
+      "allocateAuthority",
+      "candidateActivation",
+      "candidateDocuments",
+      "reporting",
+    ]),
   },
 
   {
-    id: "project-manager",
-    name: "Project Manager",
-    description: "Can manage projects, tasks, sprints and teams.",
-    usersCount: 4,
-    permissions: [
-      {
-        moduleId: "dashboard",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "projects",
-        permissions: ["view", "create", "edit"],
-      },
-      {
-        moduleId: "tasks",
-        permissions: ["view", "create", "edit", "delete"],
-      },
-      {
-        moduleId: "sprints",
-        permissions: ["view", "create", "edit"],
-      },
-      {
-        moduleId: "users",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "team-management",
-        permissions: ["view", "create", "edit"],
-      },
-      {
-        moduleId: "reports",
-        permissions: ["view", "create"],
-      },
-      {
-        moduleId: "settings",
-        permissions: ["view"],
-      },
-    ],
+    id: "user-002",
+    name: "Gary Hawkins",
+    email: "gary.hawkins@example.com",
+    role: "Administrator",
+    status: "Active",
+
+    permissions: createPermissions([
+      "auditing",
+      "allocateAuthority",
+      "candidateActivation",
+      "candidateDocuments",
+      "financialInformation",
+      "jobPosting",
+      "candidateManagement",
+      "userManagement",
+      "reporting",
+      "settings",
+    ]),
   },
 
   {
-    id: "team-member",
-    name: "Team Member",
-    description: "Can view assigned work and update tasks.",
-    usersCount: 12,
-    permissions: [
-      {
-        moduleId: "dashboard",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "projects",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "tasks",
-        permissions: ["view", "create", "edit"],
-      },
-      {
-        moduleId: "sprints",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "users",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "team-management",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "reports",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "settings",
-        permissions: ["view"],
-      },
-    ],
+    id: "user-003",
+    name: "Diana Russell",
+    email: "diana.russell@example.com",
+    role: "Manager",
+    status: "Active",
+
+    permissions: createPermissions([
+      "auditing",
+      "candidateActivation",
+      "candidateDocuments",
+      "candidateManagement",
+      "reporting",
+    ]),
   },
 
   {
-    id: "viewer",
-    name: "Viewer",
-    description: "Read-only access to project information.",
-    usersCount: 6,
-    permissions: [
-      {
-        moduleId: "dashboard",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "projects",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "tasks",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "sprints",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "users",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "team-management",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "reports",
-        permissions: ["view"],
-      },
-      {
-        moduleId: "settings",
-        permissions: [],
-      },
-    ],
+    id: "user-004",
+    name: "Jacob Jones",
+    email: "jacob.jones@example.com",
+    role: "Recruiter",
+    status: "Active",
+
+    permissions: createPermissions([
+      "candidateActivation",
+      "candidateDocuments",
+      "jobPosting",
+      "candidateManagement",
+    ]),
+  },
+
+  {
+    id: "user-005",
+    name: "Brooklyn Simmons",
+    email: "brooklyn.simmons@example.com",
+    role: "HR Manager",
+    status: "Inactive",
+
+    permissions: createPermissions([
+      "candidateDocuments",
+      "financialInformation",
+      "candidateManagement",
+      "reporting",
+    ]),
+  },
+
+  {
+    id: "user-006",
+    name: "Leslie Alexander",
+    email: "leslie.alexander@example.com",
+    role: "Consultant",
+    status: "Active",
+
+    permissions: createPermissions([
+      "auditing",
+      "candidateDocuments",
+      "reporting",
+    ]),
   },
 ];
+
+/* ==========================================================
+   ROLE OPTIONS
+========================================================== */
+
+export const roleOptions = [
+  "Administrator",
+  "Manager",
+  "HR Manager",
+  "Recruiter",
+  "Consultant",
+] as const;

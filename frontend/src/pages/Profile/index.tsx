@@ -1,14 +1,16 @@
 import * as React from "react";
 import {
+  ArrowLeft,
+  Building2,
+  CalendarDays,
   Camera,
   Mail,
   Phone,
-  Shield,
-  Building2,
-  CalendarDays,
   Save,
+  Shield,
   User as UserIcon,
 } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,23 +29,44 @@ import { useUsers } from "@/context/UsersContext";
 
 export default function Profile() {
   const { user, login } = useAuth();
-  const { updateUser } = useUsers();
+  const { users, updateUser } = useUsers();
+  const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
 
-  const [name, setName] = React.useState(user?.name ?? "");
-  const [email, setEmail] = React.useState(user?.email ?? "");
-  const [phone, setPhone] = React.useState(user?.phone ?? "");
-  const [avatar, setAvatar] = React.useState(user?.avatar ?? "");
+  /*
+   * /profile
+   *     -> Logged-in user's profile
+   *
+   * /users/:userId/profile
+   *     -> Selected user's profile
+   */
+  const isViewingOtherUser = Boolean(userId);
+
+  const profileUser = userId ? users.find((item) => item.id === userId) : user;
+
+  const [name, setName] = React.useState(profileUser?.name ?? "");
+  const [email, setEmail] = React.useState(profileUser?.email ?? "");
+  const [phone, setPhone] = React.useState(profileUser?.phone ?? "");
+  const [avatar, setAvatar] = React.useState(profileUser?.avatar ?? "");
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
+  /*
+   * Keep local form state synchronized when the selected user changes.
+   */
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setName(user?.name ?? "");
-    setEmail(user?.email ?? "");
-    setPhone(user?.phone ?? "");
-    setAvatar(user?.avatar ?? "");
-  }, [user]);
+    setName(profileUser?.name ?? "");
+    setEmail(profileUser?.email ?? "");
+    setPhone(profileUser?.phone ?? "");
+    setAvatar(profileUser?.avatar ?? "");
+  }, [profileUser]);
 
+  /*
+   * Profile picture upload
+   *
+   * Only available for the logged-in user's own profile.
+   */
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
@@ -68,6 +91,9 @@ export default function Profile() {
     reader.readAsDataURL(file);
   };
 
+  /*
+   * Generate initials for avatar fallback.
+   */
   const initials =
     name
       .trim()
@@ -77,18 +103,18 @@ export default function Profile() {
       .slice(0, 2)
       .toUpperCase() || "U";
 
+  /*
+   * Save own profile.
+   *
+   * This is intentionally disabled for /users/:userId/profile
+   * because that page is read-only.
+   */
   const handleSave = (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!user) return;
-
-    const updatedUser = {
-      ...user,
-      name,
-      email,
-      phone,
-      avatar,
-    };
+    if (!user || !profileUser || isViewingOtherUser) {
+      return;
+    }
 
     updateUser(user.id, {
       name,
@@ -97,14 +123,28 @@ export default function Profile() {
       avatar,
     });
 
+    /*
+     * Keep AuthContext user synchronized after profile update.
+     */
     const token = localStorage.getItem("auth_token");
 
     if (token) {
+      const updatedUser = {
+        ...user,
+        name,
+        email,
+        phone,
+        avatar,
+      };
+
       login(token, updatedUser);
     }
   };
 
-  if (!user) {
+  /*
+   * No logged-in user on own profile.
+   */
+  if (!user && !isViewingOtherUser) {
     return (
       <div className="flex min-h-100 items-center justify-center">
         <p className="text-sm text-muted-foreground">
@@ -114,16 +154,61 @@ export default function Profile() {
     );
   }
 
+  /*
+   * Selected user does not exist.
+   */
+  if (isViewingOtherUser && !profileUser) {
+    return (
+      <div className="flex min-h-100 flex-col items-center justify-center gap-4">
+        <p className="text-sm text-muted-foreground">
+          User profile could not be found.
+        </p>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => navigate("/users")}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Users
+        </Button>
+      </div>
+    );
+  }
+
+  if (!profileUser) {
+    return null;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
 
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">My Profile</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            {isViewingOtherUser ? "User Profile" : "My Profile"}
+          </h1>
 
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage your personal information and profile settings.
-        </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isViewingOtherUser
+              ? "View this user's profile information."
+              : "Manage your personal information and profile settings."}
+          </p>
+        </div>
+
+        {isViewingOtherUser && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate("/users")}
+            className="w-fit gap-2 border-border"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Users
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
@@ -140,32 +225,39 @@ export default function Profile() {
                 </AvatarFallback>
               </Avatar>
 
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-white shadow-md transition-colors hover:bg-orange-600"
-                aria-label="Change profile picture"
-              >
-                <Camera className="h-4 w-4" />
-              </button>
+              {/* Change avatar only on own profile */}
+              {!isViewingOtherUser && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-white shadow-md transition-colors hover:bg-orange-600"
+                    aria-label="Change profile picture"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </button>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarChange}
-              />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
+                </>
+              )}
             </div>
 
             <h2 className="mt-4 text-lg font-semibold text-foreground">
-              {name || "User"}
+              {profileUser.name || "User"}
             </h2>
 
-            <p className="mt-1 text-sm text-muted-foreground">{email}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {profileUser.email}
+            </p>
 
             <div className="mt-4 rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-600 dark:bg-orange-950/30 dark:text-orange-400">
-              {user.role}
+              {profileUser.role}
             </div>
           </CardContent>
         </Card>
@@ -174,10 +266,16 @@ export default function Profile() {
 
         <Card className="border-border bg-card">
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
+            <CardTitle>
+              {isViewingOtherUser
+                ? "Profile Information"
+                : "Personal Information"}
+            </CardTitle>
 
             <CardDescription>
-              Update the information associated with your account.
+              {isViewingOtherUser
+                ? "View the information associated with this user's account."
+                : "Update the information associated with your account."}
             </CardDescription>
           </CardHeader>
 
@@ -198,6 +296,7 @@ export default function Profile() {
                       onChange={(event) => setName(event.target.value)}
                       className="pl-10"
                       placeholder="Your full name"
+                      readOnly={isViewingOtherUser}
                     />
                   </div>
                 </div>
@@ -215,6 +314,7 @@ export default function Profile() {
                       onChange={(event) => setEmail(event.target.value)}
                       className="pl-10"
                       placeholder="you@example.com"
+                      readOnly={isViewingOtherUser}
                     />
                   </div>
                 </div>
@@ -235,6 +335,7 @@ export default function Profile() {
                       onChange={(event) => setPhone(event.target.value)}
                       className="pl-10"
                       placeholder="+92 300 1234567"
+                      readOnly={isViewingOtherUser}
                     />
                   </div>
                 </div>
@@ -244,7 +345,7 @@ export default function Profile() {
 
                   <div className="mt-1.5 flex h-10 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 text-sm text-muted-foreground">
                     <Shield className="h-4 w-4" />
-                    {user.role}
+                    {profileUser.role}
                   </div>
                 </div>
               </div>
@@ -257,7 +358,7 @@ export default function Profile() {
 
                   <div className="mt-1.5 flex h-10 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 text-sm text-muted-foreground">
                     <Building2 className="h-4 w-4" />
-                    {user.department}
+                    {profileUser.department}
                   </div>
                 </div>
 
@@ -266,22 +367,34 @@ export default function Profile() {
 
                   <div className="mt-1.5 flex h-10 items-center gap-2 rounded-md border border-border bg-muted/40 px-3 text-sm text-muted-foreground">
                     <CalendarDays className="h-4 w-4" />
-                    {user.joining_date}
+                    {profileUser.joining_date}
                   </div>
+                </div>
+              </div>
+
+              {/* Status */}
+
+              <div>
+                <Label>Status</Label>
+
+                <div className="mt-1.5 flex h-10 items-center rounded-md border border-border bg-muted/40 px-3 text-sm text-muted-foreground">
+                  {profileUser.status}
                 </div>
               </div>
 
               {/* Save */}
 
-              <div className="flex justify-end border-t border-border pt-5">
-                <Button
-                  type="submit"
-                  className="gap-2 bg-orange-500 text-white hover:bg-orange-600"
-                >
-                  <Save className="h-4 w-4" />
-                  Save Changes
-                </Button>
-              </div>
+              {!isViewingOtherUser && (
+                <div className="flex justify-end border-t border-border pt-5">
+                  <Button
+                    type="submit"
+                    className="gap-2 bg-orange-500 text-white hover:bg-orange-600"
+                  >
+                    <Save className="h-4 w-4" />
+                    Save Changes
+                  </Button>
+                </div>
+              )}
             </form>
           </CardContent>
         </Card>

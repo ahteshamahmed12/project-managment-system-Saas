@@ -11,18 +11,41 @@ import {
   HelpCircle,
   Activity,
   ClipboardMinus,
+  ShieldCheck,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavLink, useNavigate } from "react-router-dom";
+
 import ProjectModal from "@/pages/Projects/ProjectModal";
 import { useProjects } from "@/context/Projectscontext";
+import { useAuth } from "@/context/AuthContext";
+
 import type { Project } from "@/pages/Projects/projectData";
 
 const navItems = [
   {
     icon: LayoutDashboard,
+    label: "Admin Dashboard",
+    path: "/admin/dashboard",
+    adminOnly: true,
+  },
+  {
+    icon: LayoutDashboard,
     label: "Dashboard",
     path: "/dashboard",
+  },
+  {
+    icon: ShieldCheck,
+    label: "Permissions",
+    path: "/admin/permissions",
+    adminOnly: true,
+  },
+  {
+    icon: ChartNoAxesCombined,
+    label: "Performance",
+    path: "/admin/performance",
+    adminOnly: true,
   },
   {
     icon: FolderKanban,
@@ -48,6 +71,7 @@ const navItems = [
     icon: Users,
     label: "Users",
     path: "/users",
+    adminOnly: true,
   },
   {
     icon: ClipboardMinus,
@@ -68,9 +92,14 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { addProject } = useProjects();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+
+  const isAdmin = user?.role === "Admin";
+
+  const visibleNavItems = navItems.filter((item) => !item.adminOnly || isAdmin);
 
   const handleOpenCreateModal = () => {
     setIsModalOpen(true);
@@ -122,7 +151,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="flex flex-1 flex-col gap-1">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}

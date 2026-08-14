@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Plus, Search, RotateCcw } from "lucide-react";
-
+import PermissionModal from "@/pages/Admin/Permissions/PermissionModal";
+import { type PermissionUser } from "@/pages/Admin/Permissions/permissionsData";
 import { cn } from "@/lib/utils";
 import { useUsers } from "@/context/UsersContext";
 
@@ -21,6 +22,7 @@ import UserTable from "./UserTable";
 import UserModal from "./UserModal";
 
 import type { User } from "./userData";
+import { useNavigate } from "react-router-dom";
 
 type StatusFilter = "All" | User["status"];
 type RoleFilter = "All" | User["role"];
@@ -47,18 +49,20 @@ const ROLE_OPTIONS: RoleFilter[] = [
 
 export default function UsersPage() {
   const { users, addUser, updateUser, deleteUser } = useUsers();
-
   const [search, setSearch] = React.useState("");
   const [status, setStatus] = React.useState<StatusFilter>("All");
   const [role, setRole] = React.useState<RoleFilter>("All");
-
+  const navigate = useNavigate();
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
 
   const [modalOpen, setModalOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
 
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
+  const [permissionUser, setPermissionUser] =
+    React.useState<PermissionUser | null>(null);
 
+  const [permissionOpen, setPermissionOpen] = React.useState(false);
   const filteredUsers = React.useMemo(() => {
     return users.filter((user) => {
       const searchValue = search.toLowerCase();
@@ -85,7 +89,19 @@ export default function UsersPage() {
     setEditingUser(user);
     setModalOpen(true);
   };
+  const handlePermissions = (user: User) => {
+    setPermissionUser({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      role: user.role,
+      status: user.status,
+      permissions: user.permissions,
+    });
 
+    setPermissionOpen(true);
+  };
   const handleDeleteUser = React.useCallback((user: User) => {
     setSelectedUser(user);
     setDeleteOpen(true);
@@ -208,8 +224,12 @@ export default function UsersPage() {
 
       <UserTable
         users={filteredUsers}
+        onView={(user) => {
+          navigate(`/users/${user.id}/profile`);
+        }}
         onEdit={handleEdit}
         onDelete={handleDeleteUser}
+        onPermissions={handlePermissions}
       />
 
       {/* User Modal */}
@@ -229,6 +249,21 @@ export default function UsersPage() {
         title="Delete User"
         description={`Are you sure you want to delete "${selectedUser?.name}"? This action cannot be undone.`}
         onConfirm={confirmDelete}
+      />
+      <PermissionModal
+        user={permissionUser}
+        open={permissionOpen}
+        onClose={() => {
+          setPermissionOpen(false);
+          setPermissionUser(null);
+        }}
+        onSave={(updatedUser) => {
+          updateUser(updatedUser.id, {
+            permissions: updatedUser.permissions,
+          });
+
+          setPermissionUser(updatedUser);
+        }}
       />
     </div>
   );

@@ -24,8 +24,8 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   ========================================================= */
 
   const pageTitles: Record<string, string> = {
+    "/admin/dashboard": "Admin Dashboard",
     "/": "Dashboard",
-    "/dashboard": "Dashboard",
     "/projects": "Projects",
     "/tasks": "Tasks",
     "/sprint": "Sprint",
@@ -55,7 +55,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
       .toUpperCase() || "U";
 
   return (
-    <header className="flex min-w-0 items-center justify-between gap-3 px-6">
+    <header className="flex min-w-0 items-center justify-between gap-3 px-6 border-b-black shadow-amber-300">
       {/* =====================================================
           LEFT
       ===================================================== */}

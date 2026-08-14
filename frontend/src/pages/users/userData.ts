@@ -1,3 +1,8 @@
+import {
+  createPermissions,
+  type Permission,
+} from "../Admin/Permissions/permissionsData";
+
 export type UserRole =
   | "Admin"
   | "Manager"
@@ -28,11 +33,12 @@ export interface User {
   status: UserStatus;
   joining_date: string;
   created_at: string;
+  permissions: Permission[];
 }
 
 export const userData: User[] = [
   {
-    id: crypto.randomUUID(),
+    id: "user-001",
     name: "Syed Huzaifa",
     email: "huzaifa@example.com",
     phone: "+92 300 1234567",
@@ -42,9 +48,10 @@ export const userData: User[] = [
     status: "Active",
     joining_date: "2025-01-10",
     created_at: new Date().toISOString(),
+    permissions: createPermissions([]),
   },
   {
-    id: crypto.randomUUID(),
+    id: "user-002",
     name: "Zain Qaimi",
     email: "zain@example.com",
     phone: "+92 301 9876543",
@@ -54,9 +61,10 @@ export const userData: User[] = [
     status: "Active",
     joining_date: "2025-02-15",
     created_at: new Date().toISOString(),
+    permissions: createPermissions([]),
   },
   {
-    id: crypto.randomUUID(),
+    id: "user-003",
     name: "Ali Raza",
     email: "ali@example.com",
     phone: "+92 302 1112233",
@@ -66,9 +74,10 @@ export const userData: User[] = [
     status: "Active",
     joining_date: "2025-03-01",
     created_at: new Date().toISOString(),
+    permissions: createPermissions([]),
   },
   {
-    id: crypto.randomUUID(),
+    id: "user-004",
     name: "Ahmed Khan",
     email: "ahmed@example.com",
     phone: "+92 333 4455667",
@@ -78,9 +87,10 @@ export const userData: User[] = [
     status: "Inactive",
     joining_date: "2025-01-22",
     created_at: new Date().toISOString(),
+    permissions: createPermissions([]),
   },
   {
-    id: crypto.randomUUID(),
+    id: "user-005",
     name: "Fatima Noor",
     email: "fatima@example.com",
     phone: "+92 311 4567890",
@@ -90,9 +100,10 @@ export const userData: User[] = [
     status: "Active",
     joining_date: "2025-04-12",
     created_at: new Date().toISOString(),
+    permissions: createPermissions([]),
   },
   {
-    id: crypto.randomUUID(),
+    id: "user-006",
     name: "Ayesha Malik",
     email: "ayesha@example.com",
     phone: "+92 322 1110099",
@@ -102,9 +113,10 @@ export const userData: User[] = [
     status: "Active",
     joining_date: "2025-02-28",
     created_at: new Date().toISOString(),
+    permissions: createPermissions([]),
   },
   {
-    id: crypto.randomUUID(),
+    id: "user-007",
     name: "Bilal Hassan",
     email: "bilal@example.com",
     phone: "+92 334 5671234",
@@ -114,9 +126,10 @@ export const userData: User[] = [
     status: "Active",
     joining_date: "2025-01-18",
     created_at: new Date().toISOString(),
+    permissions: createPermissions([]),
   },
   {
-    id: crypto.randomUUID(),
+    id: "user-008",
     name: "Hina Tariq",
     email: "hina@example.com",
     phone: "+92 345 2223344",
@@ -126,9 +139,10 @@ export const userData: User[] = [
     status: "Inactive",
     joining_date: "2025-03-18",
     created_at: new Date().toISOString(),
+    permissions: createPermissions([]),
   },
   {
-    id: crypto.randomUUID(),
+    id: "user-009",
     name: "Usman Shah",
     email: "usman@example.com",
     phone: "+92 300 7788990",
@@ -138,9 +152,10 @@ export const userData: User[] = [
     status: "Active",
     joining_date: "2025-04-25",
     created_at: new Date().toISOString(),
+    permissions: createPermissions([]),
   },
   {
-    id: crypto.randomUUID(),
+    id: "user-010",
     name: "Sara Khan",
     email: "sara@example.com",
     phone: "+92 321 5566778",
@@ -150,5 +165,6 @@ export const userData: User[] = [
     status: "Active",
     joining_date: "2025-05-10",
     created_at: new Date().toISOString(),
+    permissions: createPermissions([]),
   },
 ];

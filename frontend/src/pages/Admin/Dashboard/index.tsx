@@ -21,7 +21,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      {/* <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Admin Dashboard
         </h1>
@@ -29,10 +29,10 @@ export default function AdminDashboard() {
         <p className="mt-1 text-sm text-muted-foreground">
           Manage and monitor your project management system.
         </p>
-      </div>
+      </div> */}
 
       {/* Statistics */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 py-4">
         {adminStats.map((stat) => (
           <StatCard
             key={stat.id}

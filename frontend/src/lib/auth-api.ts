@@ -5,10 +5,11 @@ import type {
   ResetPasswordPayload,
   SignupPayload,
   UpdateProfilePayload,
-  User,
 } from "@/types/auth";
 
-type MockUser = User & {
+import { userData, type User } from "@/pages/users/userData";
+
+type StoredUser = User & {
   password: string;
 };
 
@@ -16,106 +17,223 @@ const USERS_KEY = "mock_users";
 const CURRENT_USER_KEY = "current_user";
 const TOKEN_KEY = "auth_token";
 
-const defaultUsers: MockUser[] = [
-  {
-    id: crypto.randomUUID(),
-    name: "Admin",
-    email: "admin@gmail.com",
-    password: "12345678",
-    createdAt: new Date().toISOString(),
-  },
-];
+/*
+|--------------------------------------------------------------------------
+| Default Passwords
+|--------------------------------------------------------------------------
+| User profile data comes from userData.ts.
+| Passwords are kept separately because we don't want to add passwords
+| directly inside userData.ts.
+|--------------------------------------------------------------------------
+*/
 
-const getUsers = (): MockUser[] => {
+const defaultPasswords: Record<string, string> = {
+  "huzaifa@example.com": "12345678",
+  "zain@example.com": "12345678",
+  "ali@example.com": "12345678",
+  "ahmed@example.com": "12345678",
+  "fatima@example.com": "12345678",
+  "ayesha@example.com": "12345678",
+  "bilal@example.com": "12345678",
+  "hina@example.com": "12345678",
+  "usman@example.com": "12345678",
+  "sara@example.com": "12345678",
+};
+
+/*
+|--------------------------------------------------------------------------
+| Create mock users from userData
+|--------------------------------------------------------------------------
+*/
+
+const createDefaultUsers = (): StoredUser[] => {
+  return userData.map((user) => ({
+    ...user,
+    password: defaultPasswords[user.email] ?? "12345678",
+  }));
+};
+
+/*
+|--------------------------------------------------------------------------
+| Get users
+|--------------------------------------------------------------------------
+*/
+
+const getUsers = (): StoredUser[] => {
   const stored = localStorage.getItem(USERS_KEY);
 
   if (!stored) {
-    localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
-    return defaultUsers;
+    const users = createDefaultUsers();
+
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+
+    return users;
   }
 
-  return JSON.parse(stored) as MockUser[];
+  try {
+    return JSON.parse(stored) as StoredUser[];
+  } catch {
+    const users = createDefaultUsers();
+
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+
+    return users;
+  }
 };
 
-const saveUsers = (users: MockUser[]) => {
+/*
+|--------------------------------------------------------------------------
+| Save users
+|--------------------------------------------------------------------------
+*/
+
+const saveUsers = (users: StoredUser[]) => {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 };
 
-const delay = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
+/*
+|--------------------------------------------------------------------------
+| Remove password before exposing user
+|--------------------------------------------------------------------------
+*/
+
+const sanitizeUser = (user: StoredUser): User => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { password: _password, ...safeUser } = user;
+
+  return safeUser;
+};
+
+/*
+|--------------------------------------------------------------------------
+| Mock API delay
+|--------------------------------------------------------------------------
+*/
+
+const delay = (ms = 500) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/*
+|--------------------------------------------------------------------------
+| Auth API
+|--------------------------------------------------------------------------
+*/
 
 export const authApi = {
+  /*
+  |--------------------------------------------------------------------------
+  | Signup
+  |--------------------------------------------------------------------------
+  */
+
   signup: async (payload: SignupPayload): Promise<AuthResponse> => {
     await delay();
 
     const users = getUsers();
 
-    const exists = users.find(
-      (u) => u.email.toLowerCase() === payload.email.toLowerCase(),
-    );
+    const email = payload.email.trim().toLowerCase();
+
+    const exists = users.some((user) => user.email.toLowerCase() === email);
 
     if (exists) {
       throw new Error("Email already exists.");
     }
 
-    const newUser: MockUser = {
+    const newUser: StoredUser = {
       id: crypto.randomUUID(),
       name: payload.name,
       email: payload.email,
       password: payload.password,
-      createdAt: new Date().toISOString(),
+
+      phone: "",
+      avatar: "",
+      role: "Member",
+      department: "Development",
+      status: "Active",
+      permissions: [],
+
+      joining_date: new Date().toISOString().split("T")[0],
+      created_at: new Date().toISOString(),
     };
 
     users.push(newUser);
 
     saveUsers(users);
 
-    const { password: _password, ...user } = newUser;
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    const safeUser = sanitizeUser(newUser);
+
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(safeUser));
+
     localStorage.setItem(TOKEN_KEY, "mock-token");
 
     return {
-      user,
+      user: safeUser,
       token: "mock-token",
     };
   },
+
+  /*
+  |--------------------------------------------------------------------------
+  | Login
+  |--------------------------------------------------------------------------
+  */
 
   login: async (payload: LoginPayload): Promise<AuthResponse> => {
     await delay();
 
     const users = getUsers();
 
+    const email = payload.email.trim().toLowerCase();
+
     const foundUser = users.find(
-      (u) =>
-        u.email.toLowerCase() === payload.email.toLowerCase() &&
-        u.password === payload.password,
+      (user) =>
+        user.email.toLowerCase() === email &&
+        user.password === payload.password,
     );
 
     if (!foundUser) {
       throw new Error("Invalid email or password.");
     }
 
-    const { password, ...user } = foundUser;
+    const safeUser = sanitizeUser(foundUser);
 
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(safeUser));
+
     localStorage.setItem(TOKEN_KEY, "mock-token");
 
     return {
-      user,
+      user: safeUser,
       token: "mock-token",
     };
   },
 
+  /*
+  |--------------------------------------------------------------------------
+  | Get Current User
+  |--------------------------------------------------------------------------
+  */
+
   getCurrentUser: async (): Promise<User> => {
     await delay(200);
 
-    const user = localStorage.getItem(CURRENT_USER_KEY);
+    const storedUser = localStorage.getItem(CURRENT_USER_KEY);
 
-    if (!user) {
+    if (!storedUser) {
       throw new Error("User not found.");
     }
 
-    return JSON.parse(user) as User;
+    try {
+      return JSON.parse(storedUser) as User;
+    } catch {
+      throw new Error("Invalid user session.");
+    }
   },
+
+  /*
+  |--------------------------------------------------------------------------
+  | Update Profile
+  |--------------------------------------------------------------------------
+  */
 
   updateProfile: async (payload: UpdateProfilePayload): Promise<User> => {
     await delay();
@@ -130,7 +248,7 @@ export const authApi = {
 
     const users = getUsers();
 
-    const index = users.findIndex((u) => u.id === currentUser.id);
+    const index = users.findIndex((user) => user.id === currentUser.id);
 
     if (index === -1) {
       throw new Error("User not found.");
@@ -143,29 +261,43 @@ export const authApi = {
 
     saveUsers(users);
 
-    const { password, ...updatedUser } = users[index];
+    const updatedUser = sanitizeUser(users[index]);
 
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
 
     return updatedUser;
   },
 
+  /*
+  |--------------------------------------------------------------------------
+  | Delete Account
+  |--------------------------------------------------------------------------
+  */
+
   deleteAccount: async (): Promise<void> => {
     await delay();
 
     const current = localStorage.getItem(CURRENT_USER_KEY);
 
-    if (!current) return;
+    if (!current) {
+      return;
+    }
 
     const currentUser = JSON.parse(current) as User;
 
-    const users = getUsers().filter((u) => u.id !== currentUser.id);
+    const users = getUsers().filter((user) => user.id !== currentUser.id);
 
     saveUsers(users);
 
     localStorage.removeItem(CURRENT_USER_KEY);
     localStorage.removeItem(TOKEN_KEY);
   },
+
+  /*
+  |--------------------------------------------------------------------------
+  | Forgot Password
+  |--------------------------------------------------------------------------
+  */
 
   forgotPassword: async (
     payload: ForgotPasswordPayload,
@@ -174,9 +306,9 @@ export const authApi = {
 
     const users = getUsers();
 
-    const exists = users.some(
-      (u) => u.email.toLowerCase() === payload.email.toLowerCase(),
-    );
+    const email = payload.email.trim().toLowerCase();
+
+    const exists = users.some((user) => user.email.toLowerCase() === email);
 
     if (!exists) {
       throw new Error("Email not found.");
@@ -186,6 +318,12 @@ export const authApi = {
       message: "Password reset link sent successfully.",
     };
   },
+
+  /*
+  |--------------------------------------------------------------------------
+  | Reset Password
+  |--------------------------------------------------------------------------
+  */
 
   resetPassword: async (
     payload: ResetPasswordPayload,
@@ -198,6 +336,12 @@ export const authApi = {
       message: "Password reset successful.",
     };
   },
+
+  /*
+  |--------------------------------------------------------------------------
+  | Logout
+  |--------------------------------------------------------------------------
+  */
 
   logout: async (): Promise<void> => {
     await delay(200);

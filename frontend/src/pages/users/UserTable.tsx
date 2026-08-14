@@ -1,5 +1,11 @@
 import * as React from "react";
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   DndContext,
   PointerSensor,
@@ -18,8 +24,14 @@ import {
 
 import { CSS } from "@dnd-kit/utilities";
 
-import { GripVertical, Pencil, Trash2 } from "lucide-react";
-
+import {
+  ExternalLink,
+  GripVertical,
+  MoreVertical,
+  Pencil,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,8 +44,10 @@ import type { User } from "./userData";
 
 interface UserTableProps {
   users: User[];
+  onView: (user: User) => void;
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
+  onPermissions: (user: User) => void;
   onChange?: (users: User[]) => void;
 }
 
@@ -45,12 +59,16 @@ const PAGE_SIZE = 8;
 
 function SortableRow({
   user,
+  onView,
   onEdit,
   onDelete,
+  onPermissions,
 }: {
   user: User;
+  onView: (user: User) => void;
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
+  onPermissions: (user: User) => void;
 }) {
   const {
     attributes,
@@ -144,28 +162,54 @@ function SortableRow({
       {/* Actions */}
 
       <td className="px-4 py-3 text-right">
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex space-x-2 items-center justify-between">
+          {/* View Profile */}
           <Button
-            type="button"
+            // type="button"
             variant="ghost"
-            size="icon"
-            aria-label={`Edit ${user.name}`}
-            onClick={() => onEdit(user)}
-            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-orange-100 hover:text-orange-600 dark:hover:bg-orange-950/30"
+            // size="icon"
+            aria-label={`View ${user.name}`}
+            onClick={() => onView(user)}
+            className="text-muted-foreground hover:bg-orange-100 hover:text-orange-600 dark:hover:te-orange-950/30"
           >
-            <Pencil className="h-4 w-4" />
+            <span> View Profile </span>
+            <ExternalLink className="h-4 w-4" />
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`More actions for ${user.name}`}
+                className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-orange-100 hover:text-orange-600 dark:hover:bg-orange-950/30"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
 
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={`Delete ${user.name}`}
-            onClick={() => onDelete(user)}
-            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950/30"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={() => onEdit(user)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit User
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => onPermissions(user)}>
+                <ShieldCheck className="mr-2 h-4 w-4" />
+                Permissions
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                onClick={() => onDelete(user)}
+                className="text-red-600 focus:text-red-600"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete User
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </td>
     </tr>
@@ -178,8 +222,10 @@ function SortableRow({
 
 export default function UserTable({
   users,
+  onView,
   onEdit,
   onDelete,
+  onPermissions,
   onChange,
 }: UserTableProps) {
   const sensors = useSensors(
@@ -305,8 +351,10 @@ export default function UserTable({
                   <SortableRow
                     key={user.id}
                     user={user}
+                    onView={onView}
                     onEdit={onEdit}
                     onDelete={onDelete}
+                    onPermissions={onPermissions}
                   />
                 ))}
               </SortableContext>
