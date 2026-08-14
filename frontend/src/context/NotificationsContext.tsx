@@ -1,154 +1,56 @@
 import * as React from "react";
-
-import {
-  notificationData,
-  type Notification,
-} from "@/pages/Notifications/notificationData";
-
-/* =========================================================
-   CONTEXT TYPE
-========================================================= */
+import { notificationData, type Notification } from "@/pages/Notifications/notificationData";
+import { connectWebSocket, disconnectWebSocket } from "@/lib/websocket";
+import { useAuth } from "@/context/AuthContext";
 
 interface NotificationsContextValue {
   notifications: Notification[];
   unreadCount: number;
-
   addNotification: (notification: Notification) => void;
-
   markAsRead: (id: string) => void;
-
   markAllAsRead: () => void;
-
   deleteNotification: (id: string) => void;
-
   clearNotifications: () => void;
 }
 
-/* =========================================================
-   CONTEXT
-========================================================= */
+const NotificationsContext = React.createContext<NotificationsContextValue | undefined>(undefined);
 
-const NotificationsContext = React.createContext<
-  NotificationsContextValue | undefined
->(undefined);
+export function NotificationsProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
+  const [notifications, setNotifications] = React.useState<Notification[]>(notificationData);
 
-/* =========================================================
-   PROVIDER
-========================================================= */
+  React.useEffect(() => {
+    if (!isAuthenticated) return;
+    const socket = connectWebSocket((message) => {
+      try {
+        const parsed = JSON.parse(message) as Notification;
+        if (parsed && parsed.id) setNotifications((prev) => [parsed, ...prev]);
+      } catch {
+        // Ignore non-notification socket messages.
+      }
+    });
+    return () => {
+      socket?.close();
+      disconnectWebSocket();
+    };
+  }, [isAuthenticated]);
 
-export function NotificationsProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [notifications, setNotifications] =
-    React.useState<Notification[]>(notificationData);
-
-  /* =======================================================
-     UNREAD COUNT
-  ======================================================= */
-
-  const unreadCount = React.useMemo(() => {
-    return notifications.filter((notification) => !notification.read).length;
-  }, [notifications]);
-
-  /* =======================================================
-     ADD NOTIFICATION
-  ======================================================= */
-
-  const addNotification = React.useCallback((notification: Notification) => {
-    setNotifications((prev) => [notification, ...prev]);
-  }, []);
-
-  /* =======================================================
-     MARK AS READ
-  ======================================================= */
-
-  const markAsRead = React.useCallback((id: string) => {
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === id
-          ? {
-              ...notification,
-              read: true,
-            }
-          : notification,
-      ),
-    );
-  }, []);
-
-  /* =======================================================
-     MARK ALL AS READ
-  ======================================================= */
-
-  const markAllAsRead = React.useCallback(() => {
-    setNotifications((prev) =>
-      prev.map((notification) => ({
-        ...notification,
-        read: true,
-      })),
-    );
-  }, []);
-
-  /* =======================================================
-     DELETE NOTIFICATION
-  ======================================================= */
-
-  const deleteNotification = React.useCallback((id: string) => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== id),
-    );
-  }, []);
-
-  /* =======================================================
-     CLEAR ALL NOTIFICATIONS
-  ======================================================= */
-
-  const clearNotifications = React.useCallback(() => {
-    setNotifications([]);
-  }, []);
-
-  /* =======================================================
-     CONTEXT VALUE
-  ======================================================= */
-
-  const value = React.useMemo(
-    () => ({
-      notifications,
-      unreadCount,
-      addNotification,
-      markAsRead,
-      markAllAsRead,
-      deleteNotification,
-      clearNotifications,
-    }),
-    [
-      notifications,
-      unreadCount,
-      addNotification,
-      markAsRead,
-      markAllAsRead,
-      deleteNotification,
-      clearNotifications,
-    ],
-  );
+  const unreadCount = React.useMemo(() => notifications.filter((n) => !n.read).length, [notifications]);
+  const addNotification = React.useCallback((notification: Notification) => setNotifications((prev) => [notification, ...prev]), []);
+  const markAsRead = React.useCallback((id: string) => setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n)), []);
+  const markAllAsRead = React.useCallback(() => setNotifications((prev) => prev.map((n) => ({ ...n, read: true }))), []);
+  const deleteNotification = React.useCallback((id: string) => setNotifications((prev) => prev.filter((n) => n.id !== id)), []);
+  const clearNotifications = React.useCallback(() => setNotifications([]), []);
 
   return (
-    <NotificationsContext.Provider value={value}>
+    <NotificationsContext.Provider value={{ notifications, unreadCount, addNotification, markAsRead, markAllAsRead, deleteNotification, clearNotifications }}>
       {children}
     </NotificationsContext.Provider>
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useNotifications() {
   const context = React.useContext(NotificationsContext);
-
-  if (!context) {
-    throw new Error(
-      "useNotifications must be used inside NotificationsProvider",
-    );
-  }
-
+  if (!context) throw new Error("useNotifications must be used inside NotificationsProvider");
   return context;
 }
