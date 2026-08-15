@@ -1,5 +1,6 @@
 import type {
   AuthResponse,
+  BackendUser,
   ForgotPasswordPayload,
   LoginPayload,
   ResetPasswordPayload,
@@ -7,346 +8,132 @@ import type {
   UpdateProfilePayload,
 } from "@/types/auth";
 
-import { userData, type User } from "@/pages/users/userData";
+import type { User } from "@/pages/users/userData";
+import { mapBackendUser } from "@/lib/mappers/user-mapper";
 
-type StoredUser = User & {
-  password: string;
-};
-
-const USERS_KEY = "mock_users";
-const CURRENT_USER_KEY = "current_user";
+const API_URL = import.meta.env.VITE_API_URL as string;
 const TOKEN_KEY = "auth_token";
+const CURRENT_USER_KEY = "current_user";
 
-/*
-|--------------------------------------------------------------------------
-| Default Passwords
-|--------------------------------------------------------------------------
-| User profile data comes from userData.ts.
-| Passwords are kept separately because we don't want to add passwords
-| directly inside userData.ts.
-|--------------------------------------------------------------------------
-*/
 
-const defaultPasswords: Record<string, string> = {
-  "huzaifa@example.com": "12345678",
-  "zain@example.com": "12345678",
-  "ali@example.com": "12345678",
-  "ahmed@example.com": "12345678",
-  "fatima@example.com": "12345678",
-  "ayesha@example.com": "12345678",
-  "bilal@example.com": "12345678",
-  "hina@example.com": "12345678",
-  "usman@example.com": "12345678",
-  "sara@example.com": "12345678",
-};
 
-/*
-|--------------------------------------------------------------------------
-| Create mock users from userData
-|--------------------------------------------------------------------------
-*/
+async function apiFetch<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const token = localStorage.getItem(TOKEN_KEY);
 
-const createDefaultUsers = (): StoredUser[] => {
-  return userData.map((user) => ({
-    ...user,
-    password: defaultPasswords[user.email] ?? "12345678",
-  }));
-};
+  const res = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  });
 
-/*
-|--------------------------------------------------------------------------
-| Get users
-|--------------------------------------------------------------------------
-*/
-
-const getUsers = (): StoredUser[] => {
-  const stored = localStorage.getItem(USERS_KEY);
-
-  if (!stored) {
-    const users = createDefaultUsers();
-
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-
-    return users;
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail ?? body.message ?? "Request failed.");
   }
 
-  try {
-    return JSON.parse(stored) as StoredUser[];
-  } catch {
-    const users = createDefaultUsers();
+  if (res.status === 204) return undefined as T; // logout/delete often return no body
 
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-
-    return users;
-  }
-};
-
-/*
-|--------------------------------------------------------------------------
-| Save users
-|--------------------------------------------------------------------------
-*/
-
-const saveUsers = (users: StoredUser[]) => {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-};
-
-/*
-|--------------------------------------------------------------------------
-| Remove password before exposing user
-|--------------------------------------------------------------------------
-*/
-
-const sanitizeUser = (user: StoredUser): User => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { password: _password, ...safeUser } = user;
-
-  return safeUser;
-};
-
-/*
-|--------------------------------------------------------------------------
-| Mock API delay
-|--------------------------------------------------------------------------
-*/
-
-const delay = (ms = 500) =>
-  new Promise<void>((resolve) => setTimeout(resolve, ms));
+  return res.json() as Promise<T>;
+}
 
 /*
 |--------------------------------------------------------------------------
 | Auth API
 |--------------------------------------------------------------------------
+| Same public interface as the mock version — components don't need to
+| change. Only the implementation changed: real HTTP calls to FastAPI.
+|--------------------------------------------------------------------------
 */
 
 export const authApi = {
-  /*
-  |--------------------------------------------------------------------------
-  | Signup
-  |--------------------------------------------------------------------------
-  */
-
   signup: async (payload: SignupPayload): Promise<AuthResponse> => {
-    await delay();
+    // TODO: confirm path — /auth/register, /auth/signup, /users?
+    await apiFetch("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
 
-    const users = getUsers();
-
-    const email = payload.email.trim().toLowerCase();
-
-    const exists = users.some((user) => user.email.toLowerCase() === email);
-
-    if (exists) {
-      throw new Error("Email already exists.");
-    }
-
-    const newUser: StoredUser = {
-      id: crypto.randomUUID(),
-      name: payload.name,
-      email: payload.email,
-      password: payload.password,
-
-      phone: "",
-      avatar: "",
-      role: "Member",
-      department: "Development",
-      status: "Active",
-      permissions: [],
-
-      joining_date: new Date().toISOString().split("T")[0],
-      created_at: new Date().toISOString(),
-    };
-
-    users.push(newUser);
-
-    saveUsers(users);
-
-    const safeUser = sanitizeUser(newUser);
-
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(safeUser));
-
-    localStorage.setItem(TOKEN_KEY, "mock-token");
-
-    return {
-      user: safeUser,
-      token: "mock-token",
-    };
+    // If your register endpoint already returns a token, use that
+    // directly instead of chaining a second login call.
+    return authApi.login({ email: payload.email, password: payload.password });
   },
-
-  /*
-  |--------------------------------------------------------------------------
-  | Login
-  |--------------------------------------------------------------------------
-  */
 
   login: async (payload: LoginPayload): Promise<AuthResponse> => {
-    await delay();
+    // TODO: if you used FastAPI's OAuth2PasswordRequestForm, this route
+    // expects form-encoded "username"/"password", not JSON — see note below.
+    const { access_token } = await apiFetch<{
+      access_token: string;
+      token_type: string;
+    }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
 
-    const users = getUsers();
+    localStorage.setItem(TOKEN_KEY, access_token);
 
-    const email = payload.email.trim().toLowerCase();
+    const user = await authApi.getCurrentUser();
 
-    const foundUser = users.find(
-      (user) =>
-        user.email.toLowerCase() === email &&
-        user.password === payload.password,
-    );
-
-    if (!foundUser) {
-      throw new Error("Invalid email or password.");
-    }
-
-    const safeUser = sanitizeUser(foundUser);
-
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(safeUser));
-
-    localStorage.setItem(TOKEN_KEY, "mock-token");
-
-    return {
-      user: safeUser,
-      token: "mock-token",
-    };
+    return { user, token: access_token };
   },
-
-  /*
-  |--------------------------------------------------------------------------
-  | Get Current User
-  |--------------------------------------------------------------------------
-  */
 
   getCurrentUser: async (): Promise<User> => {
-    await delay(200);
+    const raw = await apiFetch<BackendUser>("/auth/me");
 
-    const storedUser = localStorage.getItem(CURRENT_USER_KEY);
+    const user = mapBackendUser(raw);
 
-    if (!storedUser) {
-      throw new Error("User not found.");
-    }
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
 
-    try {
-      return JSON.parse(storedUser) as User;
-    } catch {
-      throw new Error("Invalid user session.");
-    }
+    return user;
   },
-
-  /*
-  |--------------------------------------------------------------------------
-  | Update Profile
-  |--------------------------------------------------------------------------
-  */
 
   updateProfile: async (payload: UpdateProfilePayload): Promise<User> => {
-    await delay();
+    const raw = await apiFetch<BackendUser>("/auth/me", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
 
-    const current = localStorage.getItem(CURRENT_USER_KEY);
+    const user = mapBackendUser(raw);
 
-    if (!current) {
-      throw new Error("User not found.");
-    }
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
 
-    const currentUser = JSON.parse(current) as User;
-
-    const users = getUsers();
-
-    const index = users.findIndex((user) => user.id === currentUser.id);
-
-    if (index === -1) {
-      throw new Error("User not found.");
-    }
-
-    users[index] = {
-      ...users[index],
-      ...payload,
-    };
-
-    saveUsers(users);
-
-    const updatedUser = sanitizeUser(users[index]);
-
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
-
-    return updatedUser;
+    return user;
   },
 
-  /*
-  |--------------------------------------------------------------------------
-  | Delete Account
-  |--------------------------------------------------------------------------
-  */
-
   deleteAccount: async (): Promise<void> => {
-    await delay();
-
-    const current = localStorage.getItem(CURRENT_USER_KEY);
-
-    if (!current) {
-      return;
-    }
-
-    const currentUser = JSON.parse(current) as User;
-
-    const users = getUsers().filter((user) => user.id !== currentUser.id);
-
-    saveUsers(users);
+    await apiFetch<void>("/auth/me", { method: "DELETE" });
 
     localStorage.removeItem(CURRENT_USER_KEY);
     localStorage.removeItem(TOKEN_KEY);
   },
-
-  /*
-  |--------------------------------------------------------------------------
-  | Forgot Password
-  |--------------------------------------------------------------------------
-  */
 
   forgotPassword: async (
     payload: ForgotPasswordPayload,
   ): Promise<{ message: string }> => {
-    await delay();
-
-    const users = getUsers();
-
-    const email = payload.email.trim().toLowerCase();
-
-    const exists = users.some((user) => user.email.toLowerCase() === email);
-
-    if (!exists) {
-      throw new Error("Email not found.");
-    }
-
-    return {
-      message: "Password reset link sent successfully.",
-    };
+    return apiFetch("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
-
-  /*
-  |--------------------------------------------------------------------------
-  | Reset Password
-  |--------------------------------------------------------------------------
-  */
 
   resetPassword: async (
     payload: ResetPasswordPayload,
   ): Promise<{ message: string }> => {
-    await delay();
-
-    void payload;
-
-    return {
-      message: "Password reset successful.",
-    };
+    return apiFetch("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
-  /*
-  |--------------------------------------------------------------------------
-  | Logout
-  |--------------------------------------------------------------------------
-  */
-
   logout: async (): Promise<void> => {
-    await delay(200);
-
     localStorage.removeItem(CURRENT_USER_KEY);
     localStorage.removeItem(TOKEN_KEY);
+    // Only add a server call here if your backend actually tracks/
+    // blacklists tokens. Plain JWT usually needs no round-trip to log out.
   },
 };

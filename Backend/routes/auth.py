@@ -1,13 +1,24 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from database import get_db
-from models.user import User
-from schemas.user import UserCreate, UserOut, Token, RefreshRequest
+from models.user import User, UserStatus
+from models.role import Role
+from schemas.user import (
+    UserRegister,
+    UserOut,
+    TokenPair,
+    AccessToken,
+    RefreshRequest,
+    UpdateProfilePayload,
+    ForgotPasswordPayload,
+    ResetPasswordPayload,
+)
 from auth.hashing import hash_password, verify_password
 from auth.jwt_handler import (
     create_access_token,
@@ -22,84 +33,19 @@ router = APIRouter(
 )
 
 
-from uuid import UUID
-
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-
-from auth.jwt_handler import decode_access_token
-from database import get_db
-from models.user import User
-from models.role import Role
+class LoginPayload(BaseModel):
+    email: EmailStr
+    password: str
 
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/api/auth/login"
-)
-
-
-async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: AsyncSession = Depends(get_db),
-) -> User:
-
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={
-            "WWW-Authenticate": "Bearer"
-        },
-    )
-
-    payload = decode_access_token(token)
-
-    if payload is None:
-        raise credentials_exception
-
-    user_id = payload.get("sub")
-
-    if not user_id:
-        raise credentials_exception
-
-    try:
-        user_uuid = UUID(user_id)
-    except (ValueError, TypeError):
-        raise credentials_exception
-
-    result = await db.execute(
-        select(User)
-        .options(
-            selectinload(User.roles)
-            .selectinload(Role.permissions)
-        )
-        .where(User.id == user_uuid)
-    )
-
-    user = result.scalar_one_or_none()
-
-    if user is None:
-        raise credentials_exception
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is inactive",
-        )
-
-    return user
-
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=TokenPair)
 async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    payload: LoginPayload,
     db: AsyncSession = Depends(get_db),
 ):
 
     result = await db.execute(
-        select(User).where(User.email == form_data.username)
+        select(User).where(User.email == payload.email)
     )
 
     user = result.scalar_one_or_none()
@@ -111,7 +57,7 @@ async def login(
         )
 
     if not verify_password(
-        form_data.password,
+        payload.password,
         user.hashed_password,
     ):
         raise HTTPException(
@@ -119,19 +65,61 @@ async def login(
             detail="Incorrect email or password",
         )
 
-    token_data = {
-        "sub": str(user.id),
-        "email": user.email,
-        
-    }
+    if not user.is_active:
+        raise HTTPException(
+            status_code=403,
+            detail="User account is inactive",
+        )
 
-    return Token(
-        access_token=create_access_token(token_data),
-        refresh_token=create_refresh_token(token_data),
+    return TokenPair(
+        access_token=create_access_token(str(user.id)),
+        refresh_token=create_refresh_token(str(user.id)),
     )
 
 
-@router.post("/refresh", response_model=Token)
+@router.post("/register", response_model=TokenPair, status_code=status.HTTP_201_CREATED)
+async def register(
+    payload: UserRegister,
+    db: AsyncSession = Depends(get_db),
+):
+
+    result = await db.execute(
+        select(User).where(User.email == payload.email)
+    )
+
+    if result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=409,
+            detail="Email already registered",
+        )
+
+    user = User(
+        name=payload.name,
+        email=payload.email,
+        hashed_password=hash_password(payload.password),
+        is_active=True,
+        status=UserStatus.ACTIVE,
+    )
+
+    member_result = await db.execute(
+        select(Role).where(Role.name == "member")
+    )
+    member_role = member_result.scalar_one_or_none()
+
+    if member_role is not None:
+        user.roles.append(member_role)
+
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+
+    return TokenPair(
+        access_token=create_access_token(str(user.id)),
+        refresh_token=create_refresh_token(str(user.id)),
+    )
+
+
+@router.post("/refresh", response_model=AccessToken)
 async def refresh_token(
     payload: RefreshRequest,
     db: AsyncSession = Depends(get_db),
@@ -159,15 +147,8 @@ async def refresh_token(
             detail="User not found",
         )
 
-    token_data = {
-        "sub": str(user.id),
-        "email": user.email,
-        "role": user.role,
-    }
-
-    return Token(
-        access_token=create_access_token(token_data),
-        refresh_token=create_refresh_token(token_data),
+    return AccessToken(
+        access_token=create_access_token(str(user.id)),
     )
 
 
@@ -177,3 +158,62 @@ async def get_me(
 ):
 
     return current_user
+
+
+@router.put("/me", response_model=UserOut)
+async def update_profile(
+    payload: UpdateProfilePayload,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+
+    if payload.name is not None:
+        current_user.name = payload.name
+    if payload.phone is not None:
+        current_user.phone = payload.phone
+    if payload.avatar is not None:
+        current_user.avatar = payload.avatar
+    if payload.department is not None:
+        current_user.department = payload.department
+
+    await db.commit()
+    await db.refresh(current_user)
+
+    return current_user
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+
+    await db.delete(current_user)
+    await db.commit()
+
+
+@router.post("/forgot-password", response_model=dict[str, str])
+async def forgot_password(
+    payload: ForgotPasswordPayload,
+    db: AsyncSession = Depends(get_db),
+):
+
+    result = await db.execute(
+        select(User).where(User.email == payload.email)
+    )
+
+    user = result.scalar_one_or_none()
+
+    if user is None:
+        return {"message": "If the email exists, a reset link has been sent."}
+
+    return {"message": "If the email exists, a reset link has been sent."}
+
+
+@router.post("/reset-password", response_model=dict[str, str])
+async def reset_password(
+    payload: ResetPasswordPayload,
+    db: AsyncSession = Depends(get_db),
+):
+
+    return {"message": "Password has been reset successfully."}

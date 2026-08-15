@@ -8,11 +8,11 @@ class Settings(BaseSettings):
     )
 
     # PostgreSQL
-    database_url: str
+    database_url:str
 
     # JWT
-    secret_key: str
-    refresh_secret_key: str
+    secret_key:str
+    refresh_secret_key:str
     algorithm: str = "HS256"
 
     # Token Expiration

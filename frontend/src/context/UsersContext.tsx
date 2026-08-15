@@ -2,14 +2,17 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useState,
   type ReactNode,
 } from "react";
 
 import { userData, type User } from "@/pages/users/userData";
+import { usersApi } from "@/lib/users-api";
 
 interface UsersContextType {
   users: User[];
+  loading: boolean;
   addUser: (user: User) => void;
   updateUser: (id: string, values: Partial<User>) => void;
   deleteUser: (id: string) => void;
@@ -20,6 +23,29 @@ const UsersContext = createContext<UsersContextType | null>(null);
 
 export function UsersProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>(userData);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    usersApi
+      .getUsers()
+      .then((fetched) => {
+        if (!cancelled && fetched.length > 0) {
+          setUsers(fetched);
+        }
+      })
+      .catch(() => {
+        // Non-admin or unauthenticated — keep mock data as fallback.
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const addUser = useCallback((user: User) => {
     setUsers((prev) => [user, ...prev]);
@@ -55,6 +81,7 @@ export function UsersProvider({ children }: { children: ReactNode }) {
     <UsersContext.Provider
       value={{
         users,
+        loading,
         addUser,
         updateUser,
         deleteUser,

@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from database import get_db
-from models.role import Role, Permission
+from models.role import Role
+from models.permission import Permission
 from models.user import User
 from schemas.role import RoleCreate, RoleOut
 from dependencies.permission import require_permission
@@ -122,9 +123,12 @@ async def create_role(
     )
 
     db.add(role)
-
     await db.commit()
 
-    await db.refresh(role)
+    result = await db.execute(
+        select(Role)
+        .options(selectinload(Role.permissions))
+        .where(Role.id == role.id)
+    )
 
-    return role
+    return result.scalar_one()

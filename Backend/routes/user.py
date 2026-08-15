@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from database import get_db
 from models.user import User
 from models.role import Role
+from schemas.user import UserOut
 from dependencies.permission import require_permission
 
 
@@ -15,6 +16,26 @@ router = APIRouter(
     prefix="/users",
     tags=["Users"],
 )
+
+
+@router.get("/", response_model=list[UserOut])
+async def get_users(
+    current_user: User = Depends(
+        require_permission("user:read")
+    ),
+    db: AsyncSession = Depends(get_db),
+):
+
+    result = await db.execute(
+        select(User)
+        .options(
+            selectinload(User.roles)
+            .selectinload(Role.permissions)
+        )
+        .order_by(User.name)
+    )
+
+    return result.scalars().unique().all()
 
 
 @router.post("/{user_id}/roles/{role_id}")

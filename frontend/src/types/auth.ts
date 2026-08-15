@@ -1,8 +1,30 @@
+// types/auth.ts
+
 import type { User } from "@/pages/users/userData";
 
-export interface AuthResponse {
-  user: User;
-  token: string;
+// Exactly what the backend actually returns from GET /me
+export interface BackendUser {
+  id: string;
+  name: string;
+  email: string;
+  is_active: boolean;
+  phone: string | null;
+  avatar: string | null;
+  department:
+    | "Development"
+    | "Design"
+    | "QA"
+    | "Marketing"
+    | "HR"
+    | "Sales"
+    | null;
+  status: "Active" | "Inactive" | "Suspended";
+  joining_date: string | null;
+  created_at: string;
+  roles: {
+    name: string;
+    permissions: { name: string }[];
+  }[];
 }
 
 export interface LoginPayload {
@@ -16,26 +38,23 @@ export interface SignupPayload {
   password: string;
 }
 
-export interface UpdateProfilePayload {
-  name?: string;
-  email?: string;
-  phone?: string;
-  avatar?: string;
-  role?: User["role"];
-  department?: User["department"];
-  status?: User["status"];
-}
-
 export interface ForgotPasswordPayload {
   email: string;
 }
 
 export interface ResetPasswordPayload {
   token: string;
-  password: string;
+  new_password: string;
 }
 
-export interface ApiErrorShape {
-  message: string;
-  errors?: Record<string, string>;
+export interface UpdateProfilePayload {
+  name?: string;
+  phone?: string;
+  avatar?: string;
+  department?: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
 }
