@@ -19,7 +19,8 @@ import SearchFilterBar from "@/components/common/SearchFilterBar";
 import SprintTable from "./SprintTable";
 import SprintModal from "./SprintModal";
 
-import { sprintData, type Sprint, type SprintStatus } from "./sprintData";
+import { type Sprint, type SprintStatus } from "./sprintData";
+import { useSprints } from "@/context/SprintsContext";
 
 /* ==========================================================
    FILTER TYPES
@@ -54,7 +55,13 @@ const PROJECT_OPTIONS = [
 ========================================================== */
 
 export default function SprintsPage() {
-  const [sprints, setSprints] = React.useState<Sprint[]>(sprintData);
+  const {
+    sprints,
+    addSprint,
+    updateSprint,
+    deleteSprint: removeSprint,
+    reorderSprints,
+  } = useSprints();
 
   const [searchTerm, setSearchTerm] = React.useState("");
 
@@ -68,6 +75,8 @@ export default function SprintsPage() {
   const [editingSprint, setEditingSprint] = React.useState<Sprint | null>(null);
 
   const [deleteSprint, setDeleteSprint] = React.useState<Sprint | null>(null);
+
+  const [saveError, setSaveError] = React.useState<string | null>(null);
 
   /* ========================================================
      FILTERED DATA
@@ -138,6 +147,7 @@ export default function SprintsPage() {
   const handleCloseModal = React.useCallback(() => {
     setIsModalOpen(false);
     setEditingSprint(null);
+    setSaveError(null);
   }, []);
 
   /* ========================================================
@@ -145,22 +155,22 @@ export default function SprintsPage() {
   ======================================================== */
 
   const handleSaveSprint = React.useCallback(
-    (sprint: Sprint) => {
-      if (editingSprint) {
-        // TODO: Update API
+    async (sprint: Sprint) => {
+      try {
+        if (editingSprint) {
+          await updateSprint(sprint);
+        } else {
+          await addSprint(sprint);
+        }
 
-        setSprints((prev) =>
-          prev.map((item) => (item.id === sprint.id ? sprint : item)),
+        handleCloseModal();
+      } catch (err) {
+        setSaveError(
+          err instanceof Error ? err.message : "Failed to save sprint.",
         );
-      } else {
-        // TODO: Create API
-
-        setSprints((prev) => [sprint, ...prev]);
       }
-
-      handleCloseModal();
     },
-    [editingSprint, handleCloseModal],
+    [editingSprint, addSprint, updateSprint, handleCloseModal],
   );
 
   /* ========================================================
@@ -174,24 +184,25 @@ export default function SprintsPage() {
   const handleConfirmDelete = React.useCallback(() => {
     if (!deleteSprint) return;
 
-    // TODO: Delete API
-
-    setSprints((prev) =>
-      prev.filter((sprint) => sprint.id !== deleteSprint.id),
-    );
+    removeSprint(deleteSprint.id).catch((err) => {
+      setSaveError(
+        err instanceof Error ? err.message : "Failed to delete sprint.",
+      );
+    });
 
     setDeleteSprint(null);
-  }, [deleteSprint]);
+  }, [deleteSprint, removeSprint]);
 
   /* ========================================================
      DRAG & DROP
   ======================================================== */
 
-  const handleReorder = React.useCallback((updatedSprints: Sprint[]) => {
-    setSprints(updatedSprints);
-
-    // TODO: Save order API
-  }, []);
+  const handleReorder = React.useCallback(
+    (updatedSprints: Sprint[]) => {
+      reorderSprints(updatedSprints);
+    },
+    [reorderSprints],
+  );
 
   /* ========================================================
      UI
@@ -299,6 +310,24 @@ export default function SprintsPage() {
       </SearchFilterBar>
 
       {/* ==================================================
+            ERROR BANNER
+        ================================================== */}
+
+      {saveError && (
+        <div className="flex items-start justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <p>{saveError}</p>
+
+          <button
+            type="button"
+            onClick={() => setSaveError(null)}
+            className="font-semibold hover:underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* ==================================================
             TABLE
         ================================================== */}
 
@@ -324,6 +353,7 @@ export default function SprintsPage() {
         }}
         sprint={editingSprint}
         onSave={handleSaveSprint}
+        error={saveError}
       />
 
       {/* ==================================================

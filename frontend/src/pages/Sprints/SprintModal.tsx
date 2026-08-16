@@ -13,7 +13,8 @@ interface SprintModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sprint?: Sprint | null;
-  onSave: (sprint: Sprint) => void;
+  onSave: (sprint: Sprint) => Promise<void> | void;
+  error?: string | null;
 }
 
 export default function SprintModal({
@@ -21,9 +22,10 @@ export default function SprintModal({
   onOpenChange,
   sprint,
   onSave,
+  error,
 }: SprintModalProps) {
-  const handleSubmit = (data: Sprint) => {
-    onSave(data);
+  const handleSubmit = async (data: Sprint) => {
+    await onSave(data);
     onOpenChange(false);
   };
 
@@ -45,6 +47,12 @@ export default function SprintModal({
               : "Create a new sprint and define its goals."}
           </DialogDescription>
         </DialogHeader>
+
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
 
         <SprintForm
           initialData={sprint}

@@ -11,17 +11,17 @@ from auth.hashing import hash_password
 
 ADMINS = [
     {
-        "name": "Admin One",
+        "name": "Syed Huzaifa",
         "email": "syedhuzaifa@gmail.com",
         "password": "Admin@123",
     },
     {
-        "name": "Aijaz Ahmed",
+        "name": "Ahtesham Ahmed",
         "email": "ahteshamahmed405@gmail.com",
         "password": "Admin@123",
     },
     {
-        "name": "Admin Three",
+        "name": "Zain ",
         "email": "zainulabideen@gmail.com",
         "password": "Admin@123",
     },

@@ -173,7 +173,7 @@ export default function SprintForm({
 
           <Input
             type="date"
-            {...register("end_date")}
+            {...register("start_date")}
             className="rounded-xl dark:[&::-webkit-calendar-picker-indicator]:invert"
           />
 

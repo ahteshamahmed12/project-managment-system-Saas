@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Float, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -15,6 +16,7 @@ class Task(Base):
     status = Column(String)
     priority = Column(String)
     story_points = Column(Float, nullable=True)
-    assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)
+    assigned_to = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
     sprint = relationship("Sprint", back_populates="tasks")
+    project = relationship("Project", back_populates="tasks")

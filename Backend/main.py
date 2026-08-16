@@ -8,6 +8,7 @@ from database import init_db
 from routes.auth import router as auth_router
 from routes.role import router as roles_router
 from routes.user import router as users_router
+from routes.sprints import router as sprints_router
 
 from app.websocket.routes import router as websocket_router
 
@@ -53,6 +54,13 @@ app.include_router(
 # Users
 app.include_router(
     users_router,
+    prefix="/api",
+)
+
+
+# Sprints
+app.include_router(
+    sprints_router,
     prefix="/api",
 )
 
