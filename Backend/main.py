@@ -5,10 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database import init_db
 
-from routes.auth import router as auth_router
-from routes.role import router as roles_router
-from routes.user import router as users_router
-from routes.sprints import router as sprints_router
+from routers.auth import router as auth_router
+from routers.role import router as roles_router
+from routers.user import router as users_router
+from routers.sprints import router as sprints_router
+from routers.search import router as search_router
 
 from app.websocket.routes import router as websocket_router
 
@@ -70,6 +71,12 @@ app.include_router(
     websocket_router,
 )
 
+# Global search
+app.include_router(
+    search_router,
+    prefix="/api",
+)
+
 
 @app.get("/")
 async def root():
@@ -83,3 +90,4 @@ async def health():
     return {
         "status": "ok"
     }
+    

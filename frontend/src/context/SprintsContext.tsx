@@ -25,10 +25,17 @@ const SprintsContext = createContext<SprintsContextType | null>(null);
 
 export function SprintsProvider({ children }: { children: ReactNode }) {
   const [sprints, setSprints] = useState<Sprint[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return !!localStorage.getItem("auth_token");
+  });
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!localStorage.getItem("auth_token")) {
+      return;
+    }
+
     let cancelled = false;
 
     sprintsApi

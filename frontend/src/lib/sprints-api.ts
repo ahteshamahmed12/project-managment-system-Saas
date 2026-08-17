@@ -27,7 +27,9 @@ async function apiFetch<T>(
     if (res.status === 401) {
       localStorage.removeItem("auth_token");
       localStorage.removeItem("current_user");
-      window.location.href = "/login";
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
     }
 
     const body = await res.json().catch(() => ({}));

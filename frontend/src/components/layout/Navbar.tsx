@@ -1,12 +1,11 @@
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-import { Search, ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import NotificationDropdown from "@/pages/Notifications/NotificationDropdown";
+import GlobalSearch from "@/components/common/GlobalSearch";
 
 import { useAuth } from "@/context/AuthContext";
 
@@ -86,14 +85,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
       ===================================================== */}
 
       <div className="hidden flex-1 px-4 md:block">
-        <div className="relative mx-auto max-w-xl">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-
-          <Input
-            placeholder="Search..."
-            className="rounded-full border-border bg-card pl-11 shadow-sm"
-          />
-        </div>
+        <GlobalSearch />
       </div>
 
       {/* =====================================================
