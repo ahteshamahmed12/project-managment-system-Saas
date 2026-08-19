@@ -169,6 +169,19 @@ async def update_profile(
 
     if payload.name is not None:
         current_user.name = payload.name
+    if payload.email is not None and payload.email != current_user.email:
+        result = await db.execute(
+            select(User).where(User.email == payload.email)
+        )
+        existing = result.scalar_one_or_none()
+
+        if existing is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="Email is already in use.",
+            )
+
+        current_user.email = payload.email
     if payload.phone is not None:
         current_user.phone = payload.phone
     if payload.avatar is not None:

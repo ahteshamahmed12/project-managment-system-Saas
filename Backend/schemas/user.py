@@ -38,6 +38,7 @@ class RefreshRequest(BaseModel):
 
 class UpdateProfilePayload(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=100)
+    email: Optional[EmailStr] = None
     phone: Optional[str] = None
     avatar: Optional[str] = None
     department: Optional[UserDepartment] = None

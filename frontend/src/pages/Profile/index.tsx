@@ -26,6 +26,7 @@ import {
 
 import { useAuth } from "@/context/AuthContext";
 import { useUsers } from "@/context/UsersContext";
+import { authApi } from "@/lib/auth-api";
 
 export default function Profile() {
   const { user, login } = useAuth();
@@ -109,35 +110,49 @@ export default function Profile() {
    * This is intentionally disabled for /users/:userId/profile
    * because that page is read-only.
    */
-  const handleSave = (event: React.FormEvent) => {
+  const [saving, setSaving] = React.useState(false);
+  const [saveError, setSaveError] = React.useState("");
+
+  const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
 
     if (!user || !profileUser || isViewingOtherUser) {
       return;
     }
 
-    updateUser(user.id, {
-      name,
-      email,
-      phone,
-      avatar,
-    });
+    setSaving(true);
+    setSaveError("");
 
-    /*
-     * Keep AuthContext user synchronized after profile update.
-     */
-    const token = localStorage.getItem("auth_token");
-
-    if (token) {
-      const updatedUser = {
-        ...user,
+    try {
+      /*
+       * Persist to the backend so the changes are permanent (survive
+       * refresh/re-login), then keep the local contexts in sync.
+       */
+      const updatedUser = await authApi.updateProfile({
         name,
         email,
         phone,
         avatar,
-      };
+      });
 
-      login(token, updatedUser);
+      updateUser(user.id, {
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        avatar: updatedUser.avatar,
+      });
+
+      const token = localStorage.getItem("auth_token");
+
+      if (token) {
+        login(token, updatedUser);
+      }
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "Failed to save profile.",
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -385,13 +400,18 @@ export default function Profile() {
               {/* Save */}
 
               {!isViewingOtherUser && (
-                <div className="flex justify-end border-t border-border pt-5">
+                <div className="flex flex-col items-end gap-3 border-t border-border pt-5">
+                  {saveError && (
+                    <p className="text-sm text-destructive">{saveError}</p>
+                  )}
+
                   <Button
                     type="submit"
+                    disabled={saving}
                     className="gap-2 bg-orange-500 text-white hover:bg-orange-600"
                   >
                     <Save className="h-4 w-4" />
-                    Save Changes
+                    {saving ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
               )}

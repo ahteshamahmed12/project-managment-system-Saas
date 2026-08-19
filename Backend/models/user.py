@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from enum import Enum
 
-from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, String, func
+from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -63,7 +63,7 @@ class User(Base):
     )
 
     avatar: Mapped[str | None] = mapped_column(
-        String(500),
+        Text,
         nullable=True,
     )
 

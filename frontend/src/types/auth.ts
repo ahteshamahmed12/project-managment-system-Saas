@@ -49,6 +49,7 @@ export interface ResetPasswordPayload {
 
 export interface UpdateProfilePayload {
   name?: string;
+  email?: string;
   phone?: string;
   avatar?: string;
   department?: string;
