@@ -1,6 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Pencil, Trash2, User, Flag } from "lucide-react";
+import {
+  Calendar,
+  Pencil,
+  Trash2,
+  User,
+  Flag,
+  Kanban,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import type { Project } from "./projectData";
 
@@ -31,6 +39,8 @@ const priorityColors = {
 };
 
 export default function ProjectCard({ project, onEdit, onDelete }: Props) {
+  const navigate = useNavigate();
+
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       {/* Top */}
@@ -86,6 +96,15 @@ export default function ProjectCard({ project, onEdit, onDelete }: Props) {
 
       {/* Buttons */}
       <div className="mt-4 flex gap-3 pt-2">
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => navigate(`/projects/${project.id}/board`)}
+        >
+          <Kanban className="mr-2 h-4 w-4" />
+          Board
+        </Button>
+
         <Button
           variant="outline"
           className="flex-1"

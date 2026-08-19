@@ -105,8 +105,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     setIsModalOpen(true);
   };
 
-  const handleSaveProject = (project: Project) => {
-    addProject(project);
+  const handleSaveProject = async (project: Project) => {
+    await addProject(project);
     setIsModalOpen(false);
     navigate("/projects");
   };

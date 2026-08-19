@@ -118,21 +118,22 @@ export default function ProjectsPage(): React.JSX.Element {
   const confirmDelete = React.useCallback(() => {
     if (!selectedProject) return;
 
-    deleteProject(selectedProject.id);
-
-    setDeleteOpen(false);
-    setSelectedProject(null);
-
-    // TODO:
-    // await api.delete(...)
+    deleteProject(selectedProject.id)
+      .then(() => {
+        setDeleteOpen(false);
+        setSelectedProject(null);
+      })
+      .catch(() => {
+        // The modal stays open; the API client redirects on 401.
+      });
   }, [selectedProject, deleteProject]);
 
   const handleSaveProject = React.useCallback(
-    (project: Project) => {
+    async (project: Project) => {
       if (editingProject) {
-        updateProject(project);
+        await updateProject(project);
       } else {
-        addProject(project);
+        await addProject(project);
       }
     },
     [editingProject, addProject, updateProject],

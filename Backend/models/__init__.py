@@ -5,6 +5,7 @@ from models.role import Role
 from models.permission import Permission
 from models.sprints import Sprint
 from models.tasks import Task
+from models.kanban import KanbanBoard, KanbanColumn, KanbanTask
 
 
 __all__ = [
@@ -16,4 +17,7 @@ __all__ = [
     "Permission",
     "Sprint",
     "Task",
+    "KanbanBoard",
+    "KanbanColumn",
+    "KanbanTask",
 ]

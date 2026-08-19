@@ -16,15 +16,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { performanceData } from "./performanceData";
+import type { PerformanceData } from "./performanceData";
 
-const chartData = performanceData.map((user) => ({
-  name: user.name.split(" ")[0],
-  completion: user.completionRate,
-  productivity: user.productivity,
-}));
+interface PerformanceChartProps {
+  data: PerformanceData[];
+}
 
-export default function PerformanceChart() {
+export default function PerformanceChart({ data }: PerformanceChartProps) {
+  const chartData = data.map((user) => ({
+    name: user.name.split(" ")[0],
+    completion: user.completionRate,
+    productivity: user.productivity,
+  }));
+
   return (
     <Card className="border-border bg-card">
       <CardHeader>

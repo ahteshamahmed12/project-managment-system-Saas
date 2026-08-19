@@ -96,3 +96,5 @@ class User(Base):
         secondary=user_roles,
         back_populates="users",
     )
+
+    kanban_tasks = relationship("KanbanTask", back_populates="assignee")

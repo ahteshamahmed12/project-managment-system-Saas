@@ -20,3 +20,4 @@ class Task(Base):
 
     sprint = relationship("Sprint", back_populates="tasks")
     project = relationship("Project", back_populates="tasks")
+    kanban_tasks = relationship("KanbanTask", back_populates="linked_task")

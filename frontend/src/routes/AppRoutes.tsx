@@ -15,6 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 import NotificationsPage from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
 import TaskDetails from "@/pages/Tasks/TaskDetails";
+import KanbanBoardPage from "@/pages/Kanban";
 import ActivityPage from "@/pages/Activity";
 import TeamActivityPage from "@/pages/TeamActivity";
 import AdminDashboard from "@/pages/Admin/Dashboard";
@@ -167,6 +168,8 @@ export default function AppRoutes() {
           <Route path="/projects" element={<Projects />} />
 
           <Route path="/tasks" element={<Tasks />} />
+
+          <Route path="/projects/:projectId/board" element={<KanbanBoardPage />} />
 
           <Route path="/sprint" element={<Sprint />} />
 

@@ -10,6 +10,8 @@ from routers.role import router as roles_router
 from routers.user import router as users_router
 from routers.sprints import router as sprints_router
 from routers.search import router as search_router
+from routers.projects import router as projects_router
+from routers.kanban import router as kanban_router
 
 from app.websocket.routes import router as websocket_router
 
@@ -74,6 +76,20 @@ app.include_router(
 # Global search
 app.include_router(
     search_router,
+    prefix="/api",
+)
+
+
+# Projects
+app.include_router(
+    projects_router,
+    prefix="/api",
+)
+
+
+# Kanban boards
+app.include_router(
+    kanban_router,
     prefix="/api",
 )
 

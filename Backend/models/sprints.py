@@ -50,3 +50,4 @@ class Sprint(Base):
 
     project = relationship("Project", back_populates="sprints")
     tasks = relationship("Task", back_populates="sprint")
+    kanban_boards = relationship("KanbanBoard", back_populates="sprint")

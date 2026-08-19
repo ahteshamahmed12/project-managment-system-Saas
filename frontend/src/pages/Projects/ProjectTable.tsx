@@ -24,7 +24,9 @@ import {
   Trash2,
   ImageOff,
   Paperclip,
+  Kanban,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
 import {
@@ -148,6 +150,7 @@ function SortableRow({
   onEdit,
   onDelete,
 }: SortableRowProps): React.JSX.Element {
+  const navigate = useNavigate();
   const {
     attributes,
     listeners,
@@ -240,6 +243,16 @@ function SortableRow({
       </TableCell>
       <TableCell className="py-3 text-right">
         <div className="flex items-center justify-end gap-1.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={`Open board for ${project.project_name}`}
+            onClick={() => navigate(`/projects/${project.id}/board`)}
+            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-orange-100 hover:text-orange-600 dark:hover:bg-orange-950/30"
+          >
+            <Kanban className="h-4 w-4" />
+          </Button>
           <Button
             type="button"
             variant="ghost"

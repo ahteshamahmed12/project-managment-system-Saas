@@ -19,6 +19,7 @@ interface ProjectFormProps {
   initialData?: Project | null;
   onSubmit: (data: Project) => void;
   onCancel: () => void;
+  disabled?: boolean;
 }
 
 const MAX_IMAGE_SIZE_MB = 5;
@@ -33,6 +34,7 @@ export default function ProjectForm({
   initialData,
   onSubmit,
   onCancel,
+  disabled = false,
 }: ProjectFormProps) {
   const [form, setForm] = useState<Project>(
     () =>
@@ -144,6 +146,7 @@ export default function ProjectForm({
           value={form.project_name}
           onChange={handleChange}
           placeholder="Enter project name"
+          disabled={disabled}
         />
       </div>
       {/* Project Image - Drag & Drop Upload */}
@@ -251,6 +254,7 @@ export default function ProjectForm({
           onChange={handleChange}
           placeholder="Project description..."
           rows={4}
+          disabled={disabled}
         />
       </div>
       {/* Status & Priority */}
@@ -311,6 +315,7 @@ export default function ProjectForm({
             value={form.start_date}
             onChange={handleChange}
             className="scheme-light dark:scheme-dark"
+            disabled={disabled}
           />
         </div>
 
@@ -322,6 +327,7 @@ export default function ProjectForm({
             value={form.end_date}
             onChange={handleChange}
             className="scheme-light dark:scheme-dark"
+            disabled={disabled}
           />
         </div>
       </div>
@@ -341,12 +347,16 @@ export default function ProjectForm({
       </div>
       {/* Buttons */}
       <div className="flex justify-end gap-3 pt-3">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={disabled}>
           Cancel
         </Button>
 
-        <Button type="submit" className="bg-orange-500 hover:bg-orange-600">
-          {initialData ? "Update Project" : "Create Project"}
+        <Button type="submit" className="bg-orange-500 hover:bg-orange-600" disabled={disabled}>
+          {disabled
+            ? "Saving..."
+            : initialData
+              ? "Update Project"
+              : "Create Project"}
         </Button>
       </div>
     </form>
