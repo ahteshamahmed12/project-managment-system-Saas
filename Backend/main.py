@@ -12,6 +12,13 @@ from routers.sprints import router as sprints_router
 from routers.search import router as search_router
 from routers.projects import router as projects_router
 from routers.kanban import router as kanban_router
+from routers.tasks import router as tasks_router
+from routers.settings import router as settings_router
+from routers.teams import router as teams_router
+from routers.comments import router as comments_router
+from routers.activity import router as activity_router
+from routers.admin import router as admin_router
+from routers.settings import router as settings_router
 
 from app.websocket.routes import router as websocket_router
 
@@ -90,6 +97,42 @@ app.include_router(
 # Kanban boards
 app.include_router(
     kanban_router,
+    prefix="/api",
+)
+
+
+app.include_router(
+    tasks_router,
+    prefix="/api",
+)
+
+
+app.include_router(
+    settings_router,
+    prefix="/api",
+)
+
+
+app.include_router(
+    teams_router,
+    prefix="/api",
+)
+
+
+app.include_router(
+    comments_router,
+    prefix="/api",
+)
+
+
+app.include_router(
+    activity_router,
+    prefix="/api",
+)
+
+
+app.include_router(
+    admin_router,
     prefix="/api",
 )
 

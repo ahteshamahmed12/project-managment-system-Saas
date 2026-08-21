@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { userData, type User } from "@/pages/users/userData";
+import type { User } from "@/pages/users/userData";
 import { usersApi } from "@/lib/users-api";
 
 interface UsersContextType {
@@ -22,7 +22,7 @@ interface UsersContextType {
 const UsersContext = createContext<UsersContextType | null>(null);
 
 export function UsersProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<User[]>(userData);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export function UsersProvider({ children }: { children: ReactNode }) {
         }
       })
       .catch(() => {
-        // Non-admin or unauthenticated — keep mock data as fallback.
+        // API error — keep current state; user may not have permission.
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

@@ -16,6 +16,11 @@ import type {
   Workload,
 } from "@/types/kanban";
 
+export type {
+  TaskStatusUpdateRequest,
+  TaskResponse,
+} from "@/types/task";
+
 const API_URL = import.meta.env.VITE_API_URL as string;
 const TOKEN_KEY = "auth_token";
 
@@ -229,6 +234,52 @@ export const kanbanApi = {
     userId: string,
   ): Promise<Workload> =>
     apiFetch(`/v1/kanban/boards/${boardId}/workload/${userId}`),
+
+  /* ---------------- Task Flow & Status API (new) ---------------- */
+
+  listTasksByProject: (projectId: number): Promise<TaskResponse[]> =>
+    apiFetch(`/api/v1/tasks`),
+
+  createTask: (
+    projectId: number,
+    title: string,
+    description?: string | null,
+    status?: string,
+    priority?: string | null,
+    dueDate?: string | null,
+    assignedId?: number | null,
+  ): Promise<TaskResponse> =>
+    apiFetch("/api/v1/tasks", {
+      method: "POST",
+      body: JSON.stringify({ project_id: projectId, title, description, status, priority, due_date: dueDate, assigned_id: assignedId }),
+    }),
+
+  getTask: (taskId: number): Promise<TaskResponse> =>
+    apiFetch(`/api/v1/tasks/${taskId}`),
+
+  updateTaskStatus: (taskId: number, status: string): Promise<TaskResponse> =>
+    apiFetch(`/api/v1/tasks/${taskId}`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    }),
+
+  completeTask: (taskId: number): Promise<TaskResponse> =>
+    apiFetch(`/api/v1/tasks/${taskId}/complete`, { method: "POST" }),
+
+  reopenTask: (taskId: number): Promise<TaskResponse> =>
+    apiFetch(`/api/v1/tasks/${taskId}/reopen`, { method: "POST" }),
+
+  blockTask: (taskId: number, reason?: string | null): Promise<TaskResponse> =>
+    apiFetch(`/api/v1/tasks/${taskId}/block`, {
+      method: "POST",
+      body: JSON.stringify({ reason: reason ?? null }),
+    }),
+
+  unblockTask: (taskId: number): Promise<TaskResponse> =>
+    apiFetch(`/api/v1/tasks/${taskId}/unblock`, { method: "POST" }),
+
+  deleteTask: (taskId: number): Promise<void> =>
+    apiFetch(`/api/v1/tasks/${taskId}`, { method: "DELETE" }),
 
   /* ---------------- Users (for assignee pickers) ---------------- */
 
