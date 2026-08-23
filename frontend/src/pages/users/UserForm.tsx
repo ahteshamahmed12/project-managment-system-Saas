@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 
 import type { User, UserRole, UserDepartment, UserStatus } from "./userData";
+import { createPermissions } from "@/pages/Admin/Permissions/permissionsData";
 
 interface UserFormProps {
   initialData?: User | null;
@@ -58,6 +59,7 @@ export default function UserForm({
       status: "Active",
       joining_date: "",
       created_at: new Date().toISOString(),
+      permissions: createPermissions([]),
     },
   );
 

@@ -40,8 +40,9 @@ const PERMISSION_KEY_MAP: Record<string, PermissionKey> = {
 };
 
 export function mapBackendUser(raw: BackendUser): User {
-  const backendPermissionNames = raw.roles.flatMap((r) =>
-    r.permissions.map((p) => p.name),
+  const roles = Array.isArray(raw.roles) ? raw.roles : [];
+  const backendPermissionNames = roles.flatMap((r) =>
+    Array.isArray(r.permissions) ? r.permissions.map((p) => p.name) : [],
   );
 
   const permissions = Object.entries(PERMISSION_KEY_MAP)
@@ -57,7 +58,7 @@ export function mapBackendUser(raw: BackendUser): User {
     email: raw.email,
     phone: raw.phone ?? "",
     avatar: raw.avatar ?? "",
-    role: normalizeRole(raw.roles[0]?.name),
+    role: normalizeRole(roles[0]?.name),
     department: raw.department ?? "Development",
     status: raw.status ?? (raw.is_active ? "Active" : "Inactive"),
     joining_date: raw.joining_date?.split("T")[0] ?? raw.created_at?.split("T")[0] ?? "",

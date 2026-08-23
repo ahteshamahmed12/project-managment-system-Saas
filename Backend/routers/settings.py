@@ -1,17 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from pydantic import BaseModel
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from auth.dependencies import get_current_user
 from database import get_db
 from models.user import User
-from schemas.user import UserOut
+from schemas.user import UserOut, UserDepartment
 
 router = APIRouter(
     prefix="/settings",
     tags=["Settings"],
 )
+
+
+class SettingsUpdatePayload(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    avatar: Optional[str] = None
+    department: Optional[UserDepartment] = None
 
 
 @router.get("/", response_model=UserOut)
@@ -25,18 +32,17 @@ async def get_settings(
 
 @router.put("/", response_model=UserOut)
 async def update_settings(
-    payload: UserOut,
+    payload: SettingsUpdatePayload,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Update user settings/profile."""
-    # Handle the case where payload is a UserOut model vs dict
-    update_data = payload.model_dump(exclude_unset=True, exclude={"id", "email", "roles", "created_at"})
-    
+    update_data = payload.model_dump(exclude_unset=True, exclude_none=True)
+
     for field, value in update_data.items():
-        if hasattr(current_user, field) and value is not None:
+        if hasattr(current_user, field):
             setattr(current_user, field, value)
-    
+
     await db.commit()
     await db.refresh(current_user)
     return current_user

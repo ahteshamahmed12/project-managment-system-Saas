@@ -1,6 +1,10 @@
 import type { Project } from "@/pages/Projects/projectData";
 
-const API_URL = import.meta.env.VITE_API_URL as string;
+const API_BASE = (
+  import.meta.env.VITE_API_URL ??
+  import.meta.env.VITE_API_BASE_URL ??
+  "/api"
+).replace(/\/$/, "");
 const TOKEN_KEY = "auth_token";
 
 async function apiFetch<T>(
@@ -8,8 +12,9 @@ async function apiFetch<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const token = localStorage.getItem(TOKEN_KEY);
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
 
-  const res = await fetch(`${API_URL}${endpoint}`, {
+  const res = await fetch(`${API_BASE}${cleanEndpoint}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",

@@ -3,8 +3,12 @@ import { Eye, EyeOff } from "lucide-react";
 import { Input, type InputProps } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-export const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, ...props }, ref) => {
+export interface PasswordInputProps extends InputProps {
+  hasError?: boolean;
+}
+
+export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
+  ({ className, hasError, ...props }, ref) => {
     const [visible, setVisible] = React.useState(false);
 
     return (
@@ -12,7 +16,7 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
         <Input
           ref={ref}
           type={visible ? "text" : "password"}
-          className={cn("pr-11", className)}
+          className={cn("pr-11", hasError && "border-red-500", className)}
           {...props}
         />
         <button

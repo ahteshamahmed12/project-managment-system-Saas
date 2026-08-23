@@ -129,37 +129,16 @@ export default function Signup() {
        * Status     -> Active
        */
 
-      const newUser = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: "",
-        avatar:
-          avatar ||
-          `https://i.pravatar.cc/150?u=${encodeURIComponent(user.email)}`,
-        role: "Member" as const,
-        department: "Development" as const,
-        status: "Active" as const,
-        joining_date: new Date().toISOString().split("T")[0],
-        created_at: user.created_at || new Date().toISOString(),
+      const signedUpUser = {
+        ...user,
+        avatar: avatar || user.avatar || `https://i.pravatar.cc/150?u=${encodeURIComponent(user.email)}`,
       };
 
       // Save user in UsersContext
-      addUser(newUser);
+      addUser(signedUpUser);
 
       // Save authenticated user
-      login(token, {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        created_at: user.created_at,
-        phone: "",
-        avatar: "",
-        role: "Member",
-        department: "Development",
-        status: "Active",
-        joining_date: "",
-      });
+      login(token, signedUpUser);
 
       navigate("/dashboard", {
         replace: true,

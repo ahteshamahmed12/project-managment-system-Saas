@@ -41,24 +41,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Pagination from "@/components/common/Pagination";
 import StatusBadge from "@/components/common/StatusBadge";
+import type { Project } from "./projectData";
 const PAGE_SIZE = 8;
 /* =========================================================
    TYPES
 ========================================================= */
 
-export interface Project {
-  attachments: [];
-  id: string;
-  project_name: string;
-  project_image: string;
-  description: string;
-  status: "Active" | "On Hold" | "Completed";
-  priority: "Low" | "Medium" | "High";
-  start_date: string;
-  end_date: string;
-  created_by: string;
-  created_at: string;
-}
+export type { Project };
 
 export interface ProjectTableProps {
   projects: Project[];

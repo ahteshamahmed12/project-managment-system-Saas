@@ -223,7 +223,14 @@ async def update_sprint(
     current_user=Depends(require_permission("sprint:update")),
     db: AsyncSession = Depends(get_db),
 ):
-    sprint = await get_sprint_or_404(db, sprint_id)
+    result = await db.execute(
+        select(Sprint)
+        .options(selectinload(Sprint.project), selectinload(Sprint.tasks))
+        .where(Sprint.id == sprint_id)
+    )
+    sprint = result.scalar_one_or_none()
+    if sprint is None:
+        raise HTTPException(status_code=404, detail="Sprint not found")
 
     if sprint_update.name is not None:
         sprint.name = sprint_update.name

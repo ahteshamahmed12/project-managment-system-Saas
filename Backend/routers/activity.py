@@ -1,5 +1,6 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, func, desc
+from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -9,7 +10,6 @@ from models.project import Project
 from models.tasks import Task
 from models.sprints import Sprint
 from models.user import User
-from schemas.task import TaskResponse
 
 router = APIRouter(
     prefix="/activity",
@@ -28,8 +28,8 @@ async def get_recent_activity(
     task_result = await db.execute(
         select(Task)
         .options(selectinload(Task.project), selectinload(Task.assignee))
-        .order_by(desc(Task.updated_at))
-        .limit(limit // 2)
+        .order_by(desc(Task.created_at))
+        .limit(limit // 2 or 10)
     )
     tasks = task_result.scalars().all()
     
@@ -37,8 +37,8 @@ async def get_recent_activity(
     sprint_result = await db.execute(
         select(Sprint)
         .options(selectinload(Sprint.project))
-        .order_by(desc(Sprint.updated_at))
-        .limit(limit // 2)
+        .order_by(desc(Sprint.created_at))
+        .limit(limit // 2 or 10)
     )
     sprints = sprint_result.scalars().all()
     
@@ -47,25 +47,25 @@ async def get_recent_activity(
     # Format task activities
     for task in tasks:
         activity.append({
-            "id": str(task.id),
+            "id": f"task-{task.id}",
             "type": "task_update",
-            "description": f"Task '{task.title}' status updated to {task.status}",
+            "description": f"Task '{task.title}' status is {task.status}",
             "entity_type": "task",
             "entity_id": task.id,
-            "created_at": task.updated_at,
-            "user": task.assignee.name if task.assignee else "System",
+            "created_at": task.updated_at.isoformat() if task.updated_at else (task.created_at.isoformat() if task.created_at else datetime.now(timezone.utc).isoformat()),
+            "user": task.assignee.name if task.assignee else "Team Member",
         })
     
     # Format sprint activities
     for sprint in sprints:
         activity.append({
-            "id": str(sprint.id),
+            "id": f"sprint-{sprint.id}",
             "type": "sprint_update",
-            "description": f"Sprint '{sprint.name}' status updated to {sprint.status}",
+            "description": f"Sprint '{sprint.name}' is {sprint.status.value if hasattr(sprint.status, 'value') else sprint.status}",
             "entity_type": "sprint",
             "entity_id": sprint.id,
-            "created_at": sprint.updated_at,
-            "user": sprint.created_by or "System",
+            "created_at": sprint.updated_at.isoformat() if sprint.updated_at else (sprint.created_at.isoformat() if sprint.created_at else datetime.now(timezone.utc).isoformat()),
+            "user": sprint.created_by or "Project Lead",
         })
     
     # Sort by created_at descending
@@ -86,7 +86,7 @@ async def get_project_activity(
         select(Task)
         .options(selectinload(Task.project), selectinload(Task.assignee))
         .where(Task.project_id == project_id)
-        .order_by(desc(Task.updated_at))
+        .order_by(desc(Task.created_at))
         .limit(limit)
     )
     tasks = result.scalars().all()
@@ -94,13 +94,13 @@ async def get_project_activity(
     activity = []
     for task in tasks:
         activity.append({
-            "id": str(task.id),
+            "id": f"task-{task.id}",
             "type": "task_update",
-            "description": f"Task '{task.title}' status updated to {task.status}",
+            "description": f"Task '{task.title}' status is {task.status}",
             "entity_type": "task",
             "entity_id": task.id,
-            "created_at": task.updated_at,
-            "user": task.assignee.name if task.assignee else "System",
+            "created_at": task.updated_at.isoformat() if task.updated_at else (task.created_at.isoformat() if task.created_at else datetime.now(timezone.utc).isoformat()),
+            "user": task.assignee.name if task.assignee else "Team Member",
         })
     
     return activity

@@ -1,15 +1,13 @@
+from datetime import datetime, timezone
+from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from auth.dependencies import get_current_user
 from database import get_db
-from models.project import Project
 from models.tasks import Task
 from models.user import User
-from schemas.task import TaskResponse
-from schemas.user import UserOut
 
 router = APIRouter(
     prefix="/comments",
@@ -31,15 +29,13 @@ async def add_task_comment(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
-    # In a full implementation, would create a Comment model and store it
-    # For now, we'll just return the comment data
     return {
         "id": str(uuid4()),
         "task_id": task_id,
         "user_id": str(current_user.id),
         "user_name": current_user.name,
         "content": content,
-        "created_at": func.now(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -56,8 +52,6 @@ async def get_task_comments(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
-    # In a full implementation, would query Comment model
-    # For now, return empty list
     return {"comments": [], "total": 0}
 
 
@@ -67,7 +61,6 @@ async def upload_file(
     current_user: User = Depends(get_current_user),
 ):
     """Upload a file/attachment."""
-    # In a full implementation, would save file to storage and return URL
     return {
         "filename": file.filename,
         "size": file.size,

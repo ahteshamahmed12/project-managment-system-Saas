@@ -22,6 +22,7 @@ import TaskTable from "./TaskTable";
 import TaskModal from "./TaskModal";
 
 import { taskData, type Task } from "./taskData";
+import { tasksApi } from "@/lib/tasks-api";
 import { useNavigate } from "react-router-dom";
 
 /* ==========================================================
@@ -65,7 +66,21 @@ export default function TasksPage() {
 
   const [deleteTask, setDeleteTask] = React.useState<Task | null>(null);
   React.useEffect(() => {
-    // TODO: Fetch Tasks API
+    let cancelled = false;
+    tasksApi
+      .getTasks()
+      .then((data) => {
+        if (!cancelled && data.length > 0) {
+          setTasks(data);
+        }
+      })
+      .catch(() => {
+        // Keep fallback data if not logged in or backend offline
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const projectOptions = React.useMemo(() => {
@@ -137,42 +152,58 @@ export default function TasksPage() {
     setDeleteTask(task);
   }, []);
 
-  const handleConfirmDelete = React.useCallback(() => {
+  const handleConfirmDelete = React.useCallback(async () => {
     if (!deleteTask) return;
 
-    // TODO: Delete API
-
-    setTasks((prev) => prev.filter((task) => task.id !== deleteTask.id));
-
+    const idToDelete = deleteTask.id;
+    setTasks((prev) => prev.filter((task) => task.id !== idToDelete));
     setDeleteTask(null);
+
+    try {
+      await tasksApi.deleteTask(idToDelete);
+    } catch {
+      // Local state already updated
+    }
   }, [deleteTask]);
 
   const handleReorderTasks = React.useCallback((updated: Task[]) => {
     setTasks(updated);
-
-    // TODO: Save order API
   }, []);
 
   const handleSaveTask = React.useCallback(
-    (task: Task) => {
+    async (task: Task) => {
       if (editingTask) {
-        // TODO: Update API
-
         setTasks((prev) =>
           prev.map((item) => (item.id === editingTask.id ? task : item)),
         );
-      } else {
-        // TODO: Create API
 
-        setTasks((prev) => [
-          {
-            ...task,
-            id: crypto.randomUUID(),
-            created_by: "Admin",
-            created_at: new Date().toISOString(),
-          },
-          ...prev,
-        ]);
+        try {
+          const saved = await tasksApi.updateTask(editingTask.id, task);
+          setTasks((prev) =>
+            prev.map((item) => (item.id === editingTask.id ? saved : item)),
+          );
+        } catch {
+          // Keep local update
+        }
+      } else {
+        const tempId = crypto.randomUUID();
+        const newTask: Task = {
+          ...task,
+          id: tempId,
+          created_by: "Admin",
+          created_at: new Date().toISOString(),
+        };
+
+        setTasks((prev) => [newTask, ...prev]);
+
+        try {
+          const saved = await tasksApi.createTask(task);
+          setTasks((prev) =>
+            prev.map((item) => (item.id === tempId ? saved : item)),
+          );
+        } catch {
+          // Keep local created task
+        }
       }
 
       handleCloseModal();

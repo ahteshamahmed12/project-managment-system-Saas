@@ -18,7 +18,6 @@ from routers.teams import router as teams_router
 from routers.comments import router as comments_router
 from routers.activity import router as activity_router
 from routers.admin import router as admin_router
-from routers.settings import router as settings_router
 
 from app.websocket.routes import router as websocket_router
 
@@ -40,6 +39,11 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
     ],
     allow_credentials=True,
     allow_methods=["*"],

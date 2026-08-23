@@ -64,13 +64,17 @@ ROLE_PERMISSIONS = {
     ],
 
     "member": [
+        "project:create",
         "project:read",
-
+        "project:update",
         "task:create",
         "task:read",
         "task:update",
-
+        "task:delete",
+        "sprint:create",
         "sprint:read",
+        "sprint:update",
+        "user:read",
     ],
 
     "viewer": [

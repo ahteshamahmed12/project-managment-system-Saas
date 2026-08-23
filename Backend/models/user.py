@@ -98,3 +98,4 @@ class User(Base):
     )
 
     kanban_tasks = relationship("KanbanTask", back_populates="assignee")
+    tasks = relationship("Task", back_populates="assignee")

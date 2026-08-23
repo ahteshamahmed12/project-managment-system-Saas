@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +9,10 @@ from database import get_db
 from models.user import User
 from models.role import Role
 from models.permission import Permission
+from models.project import Project
+from models.tasks import Task
+from models.sprints import Sprint
+from models.kanban import KanbanTask
 from schemas.user import UserOut
 from schemas.role import RoleOut
 
@@ -24,21 +29,33 @@ async def get_admin_stats(
 ):
     """Get admin dashboard statistics."""
     # Count users
-    user_count = (await db.execute(select(func.count(User.id)))).scalar_one()
+    user_count = (await db.execute(select(func.count(User.id)))).scalar_one() or 0
     
     # Count projects
-    project_count = (await db.execute(select(func.count(func.count(Project.id))))).scalar_one() if False else 0
+    project_count = (await db.execute(select(func.count(Project.id)))).scalar_one() or 0
     
-    # Count tasks
-    task_count = (await db.execute(select(func.count(Task.id)))).scalar_one()
+    # Count tasks (legacy tasks + kanban tasks)
+    task_count = (await db.execute(select(func.count(Task.id)))).scalar_one() or 0
+    kanban_task_count = (await db.execute(select(func.count(KanbanTask.id)))).scalar_one() or 0
+    total_tasks = task_count + kanban_task_count
+
+    # Count completed tasks
+    completed_task_count = (await db.execute(
+        select(func.count(Task.id)).where(Task.status.in_(["done", "Completed", "completed"]))
+    )).scalar_one() or 0
+    completed_kanban_count = (await db.execute(
+        select(func.count(KanbanTask.id)).where(KanbanTask.is_completed == True)
+    )).scalar_one() or 0
+    total_completed = completed_task_count + completed_kanban_count
     
     # Count sprints
-    sprint_count = (await db.execute(select(func.count(Sprint.id)))).scalar_one()
+    sprint_count = (await db.execute(select(func.count(Sprint.id)))).scalar_one() or 0
     
     return {
         "users": user_count,
         "projects": project_count,
-        "tasks": task_count,
+        "tasks": total_tasks,
+        "completed": total_completed,
         "sprints": sprint_count,
     }
 
@@ -68,10 +85,15 @@ async def get_user_detail(
     db: AsyncSession = Depends(get_db),
 ):
     """Get user detail by admin."""
+    try:
+        user_uuid = UUID(user_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="Invalid user ID")
+
     result = await db.execute(
         select(User)
         .options(selectinload(User.roles).selectinload(Role.permissions))
-        .where(User.id == user_id)
+        .where(User.id == user_uuid)
     )
     user = result.scalar_one_or_none()
     
@@ -89,13 +111,21 @@ async def admin_assign_role(
     db: AsyncSession = Depends(get_db),
 ):
     """Admin assign role to user."""
-    result = await db.execute(select(User).where(User.id == user_id))
+    try:
+        user_uuid = UUID(user_id)
+        role_uuid = UUID(role_id)
+    except (ValueError, TypeError):
+        raise HTTPException(status_code=400, detail="Invalid ID format")
+
+    result = await db.execute(
+        select(User).options(selectinload(User.roles)).where(User.id == user_uuid)
+    )
     user = result.scalar_one_or_none()
     
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    result = await db.execute(select(Role).where(Role.id == role_id))
+    result = await db.execute(select(Role).where(Role.id == role_uuid))
     role = result.scalar_one_or_none()
     
     if not role:

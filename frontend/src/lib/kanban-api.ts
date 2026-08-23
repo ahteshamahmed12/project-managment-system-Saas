@@ -21,7 +21,12 @@ export type {
   TaskResponse,
 } from "@/types/task";
 
-const API_URL = import.meta.env.VITE_API_URL as string;
+const API_BASE = (
+  import.meta.env.VITE_API_URL ??
+  import.meta.env.VITE_API_BASE_URL ??
+  "/api"
+).replace(/\/$/, "");
+
 const TOKEN_KEY = "auth_token";
 
 async function apiFetch<T>(
@@ -29,8 +34,9 @@ async function apiFetch<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const token = localStorage.getItem(TOKEN_KEY);
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
 
-  const res = await fetch(`${API_URL}${endpoint}`, {
+  const res = await fetch(`${API_BASE}${cleanEndpoint}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -43,7 +49,7 @@ async function apiFetch<T>(
     if (res.status === 401) {
       localStorage.removeItem("auth_token");
       localStorage.removeItem("current_user");
-      if (window.location.pathname !== "/login") {
+      if (window.location.pathname !== "/login" && window.location.pathname !== "/admin/login") {
         window.location.href = "/login";
       }
     }
@@ -116,7 +122,7 @@ export const kanbanApi = {
       body: JSON.stringify({ task_ids: taskIds }),
     }),
 
-  /* ---------------- Tasks ---------------- */
+  /* ---------------- Tasks (Kanban Board Tasks) ---------------- */
 
   createTask: (
     boardId: number,
@@ -234,52 +240,6 @@ export const kanbanApi = {
     userId: string,
   ): Promise<Workload> =>
     apiFetch(`/v1/kanban/boards/${boardId}/workload/${userId}`),
-
-  /* ---------------- Task Flow & Status API (new) ---------------- */
-
-  listTasksByProject: (projectId: number): Promise<TaskResponse[]> =>
-    apiFetch(`/api/v1/tasks`),
-
-  createTask: (
-    projectId: number,
-    title: string,
-    description?: string | null,
-    status?: string,
-    priority?: string | null,
-    dueDate?: string | null,
-    assignedId?: number | null,
-  ): Promise<TaskResponse> =>
-    apiFetch("/api/v1/tasks", {
-      method: "POST",
-      body: JSON.stringify({ project_id: projectId, title, description, status, priority, due_date: dueDate, assigned_id: assignedId }),
-    }),
-
-  getTask: (taskId: number): Promise<TaskResponse> =>
-    apiFetch(`/api/v1/tasks/${taskId}`),
-
-  updateTaskStatus: (taskId: number, status: string): Promise<TaskResponse> =>
-    apiFetch(`/api/v1/tasks/${taskId}`, {
-      method: "PUT",
-      body: JSON.stringify({ status }),
-    }),
-
-  completeTask: (taskId: number): Promise<TaskResponse> =>
-    apiFetch(`/api/v1/tasks/${taskId}/complete`, { method: "POST" }),
-
-  reopenTask: (taskId: number): Promise<TaskResponse> =>
-    apiFetch(`/api/v1/tasks/${taskId}/reopen`, { method: "POST" }),
-
-  blockTask: (taskId: number, reason?: string | null): Promise<TaskResponse> =>
-    apiFetch(`/api/v1/tasks/${taskId}/block`, {
-      method: "POST",
-      body: JSON.stringify({ reason: reason ?? null }),
-    }),
-
-  unblockTask: (taskId: number): Promise<TaskResponse> =>
-    apiFetch(`/api/v1/tasks/${taskId}/unblock`, { method: "POST" }),
-
-  deleteTask: (taskId: number): Promise<void> =>
-    apiFetch(`/api/v1/tasks/${taskId}`, { method: "DELETE" }),
 
   /* ---------------- Users (for assignee pickers) ---------------- */
 
