@@ -23,9 +23,13 @@ from auth.hashing import hash_password, verify_password
 from auth.jwt_handler import (
     create_access_token,
     create_refresh_token,
+    create_password_reset_token,
+    decode_password_reset_token,
     decode_refresh_token,
 )
 from auth.dependencies import get_current_user
+from services.email_service import send_password_reset_email
+from config import settings
 
 router = APIRouter(
     prefix="/auth",
@@ -217,8 +221,12 @@ async def forgot_password(
 
     user = result.scalar_one_or_none()
 
-    if user is None:
-        return {"message": "If the email exists, a reset link has been sent."}
+    if user is not None and user.is_active:
+        reset_token = create_password_reset_token(str(user.id))
+        reset_link = (
+            f"{settings.frontend_url.rstrip('/')}/reset-password?token={reset_token}"
+        )
+        await send_password_reset_email(user.email, reset_link)
 
     return {"message": "If the email exists, a reset link has been sent."}
 
@@ -228,5 +236,32 @@ async def reset_password(
     payload: ResetPasswordPayload,
     db: AsyncSession = Depends(get_db),
 ):
+    data = decode_password_reset_token(payload.token)
+
+    if data is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired reset link. Please request a new one.",
+        )
+
+    try:
+        user_uuid = UUID(data["sub"])
+    except (KeyError, ValueError, TypeError):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired reset link. Please request a new one.",
+        )
+
+    result = await db.execute(select(User).where(User.id == user_uuid))
+    user = result.scalar_one_or_none()
+
+    if user is None or not user.is_active:
+        raise HTTPException(
+            status_code=404,
+            detail="User account no longer exists.",
+        )
+
+    user.hashed_password = hash_password(payload.new_password)
+    await db.commit()
 
     return {"message": "Password has been reset successfully."}

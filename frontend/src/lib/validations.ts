@@ -46,6 +46,17 @@ export const forgotPasswordSchema = z.object({
 });
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
+export const resetPasswordSchema = z
+  .object({
+    newPassword: strongPassword,
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
+
 /** Returns a 0–4 strength score used by the signup password meter. */
 export function getPasswordStrength(password: string): number {
   let score = 0;

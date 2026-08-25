@@ -11,6 +11,8 @@ import Settings from "@/pages/Settings";
 import Signup from "@/pages/Auth/signup";
 import Login from "@/pages/Auth/login";
 import AdminLogin from "@/pages/Auth/adminLogin";
+import ForgotPass from "@/pages/Auth/forgotPass";
+import ResetPass from "@/pages/Auth/resetPass";
 import { useAuth } from "@/context/AuthContext";
 import NotificationsPage from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
@@ -62,6 +64,38 @@ export default function AppRoutes() {
               />
             ) : (
               <AdminLogin />
+            )
+          }
+        />
+
+        {/* =====================================================
+            FORGOT PASSWORD
+        ===================================================== */}
+
+        <Route
+          path="/forgot-password"
+          element={
+            isAuthenticated ? (
+              <Navigate
+                to={isAdmin ? "/admin/dashboard" : "/dashboard"}
+                replace
+              />
+            ) : (
+              <ForgotPass />
+            )
+          }
+        />
+
+        <Route
+          path="/reset-password"
+          element={
+            isAuthenticated ? (
+              <Navigate
+                to={isAdmin ? "/admin/dashboard" : "/dashboard"}
+                replace
+              />
+            ) : (
+              <ResetPass />
             )
           }
         />

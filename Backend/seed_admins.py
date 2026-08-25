@@ -17,7 +17,7 @@ ADMINS = [
     },
     {
         "name": "Ahtesham Ahmed",
-        "email": "ahteshamahmed405@gmail.com",
+        "email": "ahteshamahmed402@gmail.com",
         "password": "Admin@123",
     },
     {

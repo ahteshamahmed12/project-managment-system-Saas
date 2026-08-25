@@ -52,13 +52,13 @@ export default function Reports() {
               <option>Last 7 Days</option>
               <option>This Year</option>
             </select>
-            <button className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-medium text-white">
+            <button className="flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-medium text-white">
               <Download size={16} /> Export
             </button>
           </div>
         </header>
 
-        <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-orange-500">
           <StatCard
             title="Users"
             value={data.users}
@@ -70,6 +70,7 @@ export default function Reports() {
             value={data.activities}
             subtitle="Across workspace"
             icon={Activity}
+            
           />
           <StatCard
             title="Tasks"

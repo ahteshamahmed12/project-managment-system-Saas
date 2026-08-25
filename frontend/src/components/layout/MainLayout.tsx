@@ -13,7 +13,7 @@ export default function MainLayout() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Content */}
-      <div className="transition-all duration-300 lg:ml-60">
+      <div className="transition-all duration-300 md:ml-60">
         {/* Navbar */}
         <Navbar onMenuClick={() => setSidebarOpen(true)} />
 

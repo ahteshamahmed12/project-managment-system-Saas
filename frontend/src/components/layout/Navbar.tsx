@@ -1,7 +1,21 @@
-import { ChevronDown, Menu } from "lucide-react";
+import {
+  ChevronDown,
+  LogOut,
+  Menu,
+  Settings,
+  UserRound,
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import NotificationDropdown from "@/pages/Notifications/NotificationDropdown";
@@ -16,7 +30,12 @@ interface NavbarProps {
 export default function Navbar({ onMenuClick }: NavbarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   /* =========================================================
      PAGE TITLES
@@ -67,7 +86,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           variant="ghost"
           size="icon"
           onClick={onMenuClick}
-          className="shrink-0 rounded-xl lg:hidden"
+          className="shrink-0 rounded-xl md:hidden"
           aria-label="Open menu"
         >
           <Menu className="h-5 w-5 text-foreground" />
@@ -103,35 +122,68 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
         {/* User */}
 
-        <div className="">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => navigate("/profile")}
-            className="flex h-auto items-center gap-2 rounded-full border border-border bg-card px-2 py-1 shadow-sm hover:bg-accent md:px-3 md:py-2"
-            aria-label="Open profile"
-          >
-            <Avatar className="h-9 w-9">
-              <AvatarImage src={user?.avatar} alt={userName} />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              className="flex h-auto items-center gap-2 rounded-full border border-border bg-card px-2 py-1 shadow-sm hover:bg-accent md:px-3 md:py-2"
+              aria-label="Open user menu"
+            >
+              <Avatar className="h-9 w-9">
+                <AvatarImage src={user?.avatar} alt={userName} />
 
-              <AvatarFallback className="bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400">
-                {userInitials}
-              </AvatarFallback>
-            </Avatar>
+                <AvatarFallback className="bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
 
-            <div className="hidden min-w-0 text-left md:block">
-              <p className="max-w-32 truncate text-sm font-semibold text-foreground">
-                {userName}
-              </p>
+              <div className="hidden min-w-0 text-left md:block">
+                <p className="max-w-32 truncate text-sm font-semibold text-foreground">
+                  {userName}
+                </p>
 
-              <p className="max-w-32 truncate text-xs text-muted-foreground">
+                <p className="max-w-32 truncate text-xs text-muted-foreground">
+                  {userEmail}
+                </p>
+              </div>
+
+              <ChevronDown className="hidden h-4 w-4 shrink-0 text-muted-foreground md:block" />
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="flex flex-col">
+              <span className="truncate font-semibold">{userName}</span>
+
+              <span className="truncate text-xs font-normal text-muted-foreground">
                 {userEmail}
-              </p>
-            </div>
+              </span>
+            </DropdownMenuLabel>
 
-            <ChevronDown className="hidden h-4 w-4 shrink-0 text-muted-foreground md:block" />
-          </Button>
-        </div>
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem onClick={() => navigate("/profile")}>
+              <UserRound className="h-4 w-4" />
+              Profile
+            </DropdownMenuItem>
+
+            <DropdownMenuItem onClick={() => navigate("/settings")}>
+              <Settings className="h-4 w-4" />
+              Settings
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

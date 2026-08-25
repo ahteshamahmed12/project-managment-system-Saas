@@ -125,14 +125,17 @@ function WorkloadChart() {
   ];
   // const max = Math.max(...data.map((d) => d.count));
   return (
-    <div className="flex h-55 items-end justify-between gap-2 px-2">
+    <div className="flex items-end justify-between gap-2 overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {data.map((d) => (
-        <div key={d.name} className="flex flex-1 flex-col items-center gap-2">
+        <div
+          key={d.name}
+          className="flex min-w-12 flex-1 flex-col items-center gap-2"
+        >
           <div className="flex flex-col-reverse items-center gap-1">
             {Array.from({ length: d.count }).map((_, i) => (
               <div
                 key={i}
-                className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-black text-[10px] font-bold ${
+                className={`flex h-5 w-5 items-center justify-center rounded-full border-2 border-black text-[9px] font-bold sm:h-7 sm:w-7 sm:text-[10px] ${
                   i === d.count - 1
                     ? "bg-orange-500 text-white border-orange-500"
                     : "bg-white"
@@ -142,7 +145,9 @@ function WorkloadChart() {
               </div>
             ))}
           </div>
-          <span className="text-xs text-gray-600">{d.name}</span>
+          <span className="w-full truncate text-center text-xs text-gray-600">
+            {d.name}
+          </span>
         </div>
       ))}
     </div>
@@ -284,12 +289,12 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         {/* Project Summary */}
         <Card className="rounded-2xl border-0 shadow-sm xl:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardHeader className="flex flex-col gap-3 pb-2 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-lg">Project summary</CardTitle>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {["Project", "Project manager", "Status"].map((f) => (
                 <Select key={f}>
-                  <SelectTrigger className="h-8 w-32.5 rounded-full bg-gray-50 text-xs border-0">
+                  <SelectTrigger className="h-8 w-28 min-w-0 flex-1 rounded-full bg-gray-50 text-xs border-0 sm:w-32.5 sm:flex-none">
                     <SelectValue placeholder={f} />
                   </SelectTrigger>
                   <SelectContent>
@@ -380,7 +385,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="important">
-              <TabsList className="mb-4 bg-transparent p-0">
+              <TabsList className="mb-4 max-w-full overflow-x-auto bg-transparent p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {[
                   { v: "all", l: "All (10)" },
                   { v: "important", l: "Important" },
@@ -390,7 +395,7 @@ export default function Dashboard() {
                   <TabsTrigger
                     key={t.v}
                     value={t.v}
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                    className="shrink-0 rounded-none border-b-2 border-transparent px-2 text-xs data-[state=active]:border-blue-500 data-[state=active]:bg-transparent data-[state=active]:shadow-none sm:px-3 sm:text-sm"
                   >
                     {t.l}
                   </TabsTrigger>
@@ -400,17 +405,17 @@ export default function Dashboard() {
                 {tasks.map((task, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3"
+                    className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 px-4 py-3"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
                       <Checkbox
                         checked={task.done}
-                        className="rounded-full data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                        className="shrink-0 rounded-full data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
                       />
                       <span
-                        className={
+                        className={`min-w-0 truncate ${
                           task.done ? "line-through text-gray-400" : ""
-                        }
+                        }`}
                       >
                         {task.text}
                       </span>

@@ -18,6 +18,17 @@ class Settings(BaseSettings):
     # Token Expiration
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
+    reset_token_expire_minutes: int = 15
+
+    # Frontend (used to build password reset links)
+    frontend_url: str = "http://localhost:5173"
+
+    # SMTP (leave host empty to log reset links to the console instead)
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    email_from: str = "no-reply@promage.local"
 
 
 settings = Settings()

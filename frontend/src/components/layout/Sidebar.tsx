@@ -111,23 +111,42 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     navigate("/projects");
   };
 
+  /* Lock background scroll + close on Escape while the drawer is open */
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   return (
     <>
       {/* Mobile Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={onClose}
-          aria-hidden="true"
-        />
-      )}
+      <div
+        className={cn(
+          "fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 md:hidden",
+          isOpen ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 flex h-screen w-60 flex-col bg-black px-4 py-6 text-white transition-transform duration-300",
+          "fixed left-0 top-0 z-50 flex h-dvh w-60 flex-col bg-black px-4 py-6 text-white transition-transform duration-300",
           isOpen ? "translate-x-0" : "-translate-x-full",
-          "lg:translate-x-0",
+          "md:translate-x-0",
         )}
       >
         {/* Logo */}
@@ -150,7 +169,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </Button>
 
         {/* Navigation */}
-        <nav className="flex flex-1 flex-col gap-1">
+        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
           {visibleNavItems.map((item) => (
             <NavLink
               key={item.path}
