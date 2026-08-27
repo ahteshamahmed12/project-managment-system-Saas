@@ -25,6 +25,7 @@ import { authApi } from "@/lib/auth-api";
 export default function ForgotPass() {
   const [formError, setFormError] = React.useState<string | null>(null);
   const [sentTo, setSentTo] = React.useState<string | null>(null);
+  const [devLink, setDevLink] = React.useState<string | null>(null);
 
   const {
     register,
@@ -38,9 +39,11 @@ export default function ForgotPass() {
 
   const onSubmit = async (values: ForgotPasswordFormValues) => {
     setFormError(null);
+    setDevLink(null);
     try {
-      await authApi.forgotPassword(values);
+      const res = await authApi.forgotPassword(values);
       setSentTo(values.email);
+      if (res.reset_link) setDevLink(res.reset_link);
     } catch (err) {
       const message =
         (err as { message?: string })?.message ??
@@ -69,6 +72,24 @@ export default function ForgotPass() {
               <span className="font-medium text-ink-900">{sentTo}</span>. The
               link expires in 15 minutes.
             </CardDescription>
+
+            {devLink && (
+              <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-left text-sm">
+                <p className="mb-1 font-medium text-amber-800">
+                  Email isn't configured yet
+                </p>
+                <p className="mb-2 text-amber-700">
+                  SMTP isn't set up, so the link was printed to the server
+                  console instead of being emailed. Use it directly:
+                </p>
+                <a
+                  href={devLink}
+                  className="break-all font-mono text-xs text-brand-600 underline"
+                >
+                  {devLink}
+                </a>
+              </div>
+            )}
 
             <Button
               variant="outline"

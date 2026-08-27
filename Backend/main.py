@@ -18,6 +18,7 @@ from routers.teams import router as teams_router
 from routers.comments import router as comments_router
 from routers.activity import router as activity_router
 from routers.admin import router as admin_router
+from routers.notifications import router as notifications_router
 
 from app.websocket.routes import router as websocket_router
 
@@ -137,6 +138,12 @@ app.include_router(
 
 app.include_router(
     admin_router,
+    prefix="/api",
+)
+
+
+app.include_router(
+    notifications_router,
     prefix="/api",
 )
 

@@ -99,3 +99,8 @@ class User(Base):
 
     kanban_tasks = relationship("KanbanTask", back_populates="assignee")
     tasks = relationship("Task", back_populates="assignee")
+    notifications = relationship(
+        "Notification",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )

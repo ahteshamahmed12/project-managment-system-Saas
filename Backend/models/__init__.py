@@ -6,6 +6,7 @@ from models.permission import Permission
 from models.sprints import Sprint
 from models.tasks import Task
 from models.kanban import KanbanBoard, KanbanColumn, KanbanTask
+from models.notification import Notification
 
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "KanbanBoard",
     "KanbanColumn",
     "KanbanTask",
+    "Notification",
 ]

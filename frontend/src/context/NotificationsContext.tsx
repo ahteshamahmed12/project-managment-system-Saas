@@ -1,9 +1,11 @@
 import * as React from "react";
-
+import { useAuth } from "@/context/AuthContext";
 import {
-  notificationData,
-  type Notification,
-} from "@/pages/Notifications/notificationData";
+  notificationsApi,
+  getNotificationsWsUrl,
+  type BackendNotification,
+} from "@/lib/notifications-api";
+import type { Notification } from "@/pages/Notifications/notificationData";
 
 /* =========================================================
    CONTEXT TYPE
@@ -12,6 +14,7 @@ import {
 interface NotificationsContextValue {
   notifications: Notification[];
   unreadCount: number;
+  loading: boolean;
 
   addNotification: (notification: Notification) => void;
 
@@ -41,8 +44,92 @@ export function NotificationsProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [notifications, setNotifications] =
-    React.useState<Notification[]>(notificationData);
+  const { isAuthenticated } = useAuth();
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  /* =======================================================
+     LOAD NOTIFICATIONS FROM THE BACKEND
+  ======================================================= */
+
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      setNotifications([]);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+
+    notificationsApi
+      .list()
+      .then((fetched) => {
+        if (!cancelled) {
+          setNotifications(fetched as Notification[]);
+        }
+      })
+      .catch(() => {
+        // API error — start with an empty list.
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
+
+  /* =======================================================
+     REAL-TIME UPDATES VIA WEBSOCKET
+  ======================================================= */
+
+  React.useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let cancelled = false;
+    let socket: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const connect = () => {
+      if (cancelled) return;
+
+      socket = new WebSocket(getNotificationsWsUrl());
+
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message?.type === "notification" && message.data) {
+            const incoming = message.data as BackendNotification;
+            setNotifications((prev) => {
+              if (prev.some((n) => n.id === incoming.id)) return prev;
+              return [incoming as Notification, ...prev];
+            });
+          }
+        } catch {
+          // Ignore malformed messages.
+        }
+      };
+
+      socket.onclose = () => {
+        if (cancelled) return;
+        reconnectTimer = setTimeout(connect, 3000);
+      };
+
+      socket.onerror = () => {
+        socket?.close();
+      };
+    };
+
+    connect();
+
+    return () => {
+      cancelled = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      socket?.close();
+    };
+  }, [isAuthenticated]);
 
   /* =======================================================
      UNREAD COUNT
@@ -53,7 +140,7 @@ export function NotificationsProvider({
   }, [notifications]);
 
   /* =======================================================
-     ADD NOTIFICATION
+      ADD NOTIFICATION
   ======================================================= */
 
   const addNotification = React.useCallback((notification: Notification) => {
@@ -61,61 +148,64 @@ export function NotificationsProvider({
   }, []);
 
   /* =======================================================
-     MARK AS READ
+      MARK AS READ
   ======================================================= */
 
   const markAsRead = React.useCallback((id: string) => {
     setNotifications((prev) =>
       prev.map((notification) =>
         notification.id === id
-          ? {
-              ...notification,
-              read: true,
-            }
+          ? { ...notification, read: true }
           : notification,
       ),
     );
+
+    notificationsApi.markRead(id).catch(() => {});
   }, []);
 
   /* =======================================================
-     MARK ALL AS READ
+      MARK ALL AS READ
   ======================================================= */
 
   const markAllAsRead = React.useCallback(() => {
     setNotifications((prev) =>
-      prev.map((notification) => ({
-        ...notification,
-        read: true,
-      })),
+      prev.map((notification) => ({ ...notification, read: true })),
     );
+
+    notificationsApi.markAllRead().catch(() => {});
   }, []);
 
   /* =======================================================
-     DELETE NOTIFICATION
+      DELETE NOTIFICATION
   ======================================================= */
 
   const deleteNotification = React.useCallback((id: string) => {
     setNotifications((prev) =>
       prev.filter((notification) => notification.id !== id),
     );
+
+    notificationsApi.remove(id).catch(() => {});
   }, []);
 
   /* =======================================================
-     CLEAR ALL NOTIFICATIONS
+      CLEAR ALL NOTIFICATIONS
   ======================================================= */
 
   const clearNotifications = React.useCallback(() => {
     setNotifications([]);
+
+    notificationsApi.clear().catch(() => {});
   }, []);
 
   /* =======================================================
-     CONTEXT VALUE
+      CONTEXT VALUE
   ======================================================= */
 
   const value = React.useMemo(
     () => ({
       notifications,
       unreadCount,
+      loading,
       addNotification,
       markAsRead,
       markAllAsRead,
@@ -125,6 +215,7 @@ export function NotificationsProvider({
     [
       notifications,
       unreadCount,
+      loading,
       addNotification,
       markAsRead,
       markAllAsRead,

@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 from database import AsyncSessionLocal
 from models import Role, User
 from models.user import UserStatus
+from models.notification import Notification
 from auth.hashing import hash_password
 
 
@@ -24,6 +25,33 @@ ADMINS = [
         "name": "Zain ",
         "email": "zainulabideen@gmail.com",
         "password": "Admin@123",
+    },
+]
+
+SAMPLE_NOTIFICATIONS = [
+    {
+        "title": "New Task Assigned",
+        "message": "You have been assigned a new task in Project Management SaaS.",
+        "type": "task",
+        "read": False,
+    },
+    {
+        "title": "Sprint Started",
+        "message": "Sprint 21 is now active.",
+        "type": "sprint",
+        "read": False,
+    },
+    {
+        "title": "Project Updated",
+        "message": "Project Management SaaS project details were updated.",
+        "type": "project",
+        "read": False,
+    },
+    {
+        "title": "New Team Member",
+        "message": "A new member has been added to your team.",
+        "type": "team",
+        "read": True,
     },
 ]
 
@@ -57,6 +85,22 @@ async def seed():
                 db.add(user)
             elif admin_role not in user.roles:
                 user.roles.append(admin_role)
+
+            # Sample notifications (skip if the user already has some).
+            existing = await db.execute(
+                select(Notification).where(Notification.user_id == user.id)
+            )
+            if existing.scalars().first() is None:
+                for sample in SAMPLE_NOTIFICATIONS:
+                    db.add(
+                        Notification(
+                            user_id=user.id,
+                            title=sample["title"],
+                            message=sample["message"],
+                            type=sample["type"],
+                            read=sample["read"],
+                        )
+                    )
 
             print(f"Admin ready: {admin['email']} / {admin['password']}")
 

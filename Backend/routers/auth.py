@@ -221,14 +221,26 @@ async def forgot_password(
 
     user = result.scalar_one_or_none()
 
+    # Always build the link so the flow works without email/SMTP.
     if user is not None and user.is_active:
         reset_token = create_password_reset_token(str(user.id))
         reset_link = (
             f"{settings.frontend_url.rstrip('/')}/reset-password?token={reset_token}"
         )
-        await send_password_reset_email(user.email, reset_link)
 
-    return {"message": "If the email exists, a reset link has been sent."}
+        # Only attempt a real email when SMTP is configured.
+        if settings.smtp_host:
+            await send_password_reset_email(user.email, reset_link)
+    else:
+        reset_link = None
+
+    response: dict[str, str] = {
+        "message": "If the email exists, a reset link has been sent."
+    }
+    if reset_link is not None:
+        response["reset_link"] = reset_link
+
+    return response
 
 
 @router.post("/reset-password", response_model=dict[str, str])

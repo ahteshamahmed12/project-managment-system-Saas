@@ -117,7 +117,7 @@ export const authApi = {
 
   forgotPassword: async (
     payload: ForgotPasswordPayload,
-  ): Promise<{ message: string }> => {
+  ): Promise<{ message: string; reset_link?: string }> => {
     return apiFetch("/auth/forgot-password", {
       method: "POST",
       body: JSON.stringify(payload),
