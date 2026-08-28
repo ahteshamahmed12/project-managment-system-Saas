@@ -7,6 +7,8 @@ from database import AsyncSessionLocal
 from models import Role, User
 from models.user import UserStatus
 from models.notification import Notification
+from models.project import Project
+from models.tasks import Task
 from auth.hashing import hash_password
 
 
@@ -25,6 +27,54 @@ ADMINS = [
         "name": "Zain ",
         "email": "zainulabideen@gmail.com",
         "password": "Admin@123",
+    },
+]
+
+SAMPLE_PROJECTS = [
+    {
+        "name": "Project Alpha",
+        "description": "Project management dashboard redesign.",
+        "status": "Active",
+        "priority": "High",
+        "start_date": "2026-08-01",
+        "end_date": "2026-10-15",
+        "created_by": "Syed Huzaifa",
+    },
+    {
+        "name": "CRM System",
+        "description": "Customer relationship management system.",
+        "status": "On Hold",
+        "priority": "Medium",
+        "start_date": "2026-07-20",
+        "end_date": "2026-09-30",
+        "created_by": "Ahtesham Ahmed",
+    },
+    {
+        "name": "E-Commerce Website",
+        "description": "Complete online shopping platform.",
+        "status": "Completed",
+        "priority": "High",
+        "start_date": "2026-05-01",
+        "end_date": "2026-07-01",
+        "created_by": "Zain",
+    },
+    {
+        "name": "TaskFlow",
+        "description": "Task management platform for agile teams.",
+        "status": "Active",
+        "priority": "High",
+        "start_date": "2025-06-01",
+        "end_date": "2025-09-15",
+        "created_by": "Syed Huzaifa",
+    },
+    {
+        "name": "Hospital ERP",
+        "description": "Hospital management and patient record system.",
+        "status": "On Hold",
+        "priority": "Medium",
+        "start_date": "2025-04-10",
+        "end_date": "2025-11-20",
+        "created_by": "Ahtesham Ahmed",
     },
 ]
 
@@ -83,8 +133,12 @@ async def seed():
                     roles=[admin_role],
                 )
                 db.add(user)
-            elif admin_role not in user.roles:
-                user.roles.append(admin_role)
+            else:
+                user.hashed_password = hash_password(admin["password"])
+                user.is_active = True
+                user.status = UserStatus.ACTIVE
+                if admin_role not in user.roles:
+                    user.roles.append(admin_role)
 
             # Sample notifications (skip if the user already has some).
             existing = await db.execute(
@@ -104,8 +158,26 @@ async def seed():
 
             print(f"Admin ready: {admin['email']} / {admin['password']}")
 
+        # Seed projects for search and dashboard
+        for p_data in SAMPLE_PROJECTS:
+            existing_p = await db.execute(
+                select(Project).where(Project.name == p_data["name"])
+            )
+            project = existing_p.scalar_one_or_none()
+            if project is None:
+                project = Project(
+                    name=p_data["name"],
+                    description=p_data["description"],
+                    status=p_data["status"],
+                    priority=p_data["priority"],
+                    start_date=p_data["start_date"],
+                    end_date=p_data["end_date"],
+                    created_by=p_data["created_by"],
+                )
+                db.add(project)
+
         await db.commit()
-        print("Admin seed completed successfully.")
+        print("Admin seed and sample projects completed successfully.")
 
 
 if __name__ == "__main__":
