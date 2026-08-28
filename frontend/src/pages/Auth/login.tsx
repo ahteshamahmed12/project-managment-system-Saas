@@ -40,13 +40,7 @@ export default function Login() {
 
     try {
       const { user, token } = await authApi.login(values);
-      login(token, user);
-      if (!values.remember) {
-        // Session-only: clear the token once the browser tab closes.
-        window.addEventListener("beforeunload", () =>
-          localStorage.removeItem("auth_token"),
-        );
-      }
+      login(token, user, values.remember);
       navigate("/dashboard", { replace: true, state: { userId: user.id } });
     } catch (err) {
       const message =

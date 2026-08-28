@@ -44,7 +44,20 @@ export default function TeamManagementPage() {
      TEAMS STATE
   ======================================================= */
 
-  const [teams, setTeams] = React.useState<Team[]>(teamData);
+  const [teams, setTeams] = React.useState<Team[]>(() => {
+    if (typeof window === "undefined") return teamData;
+    const stored = localStorage.getItem("app_teams");
+    if (!stored) return teamData;
+    try {
+      return JSON.parse(stored) as Team[];
+    } catch {
+      return teamData;
+    }
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem("app_teams", JSON.stringify(teams));
+  }, [teams]);
 
   /* =======================================================
      FILTER STATE
