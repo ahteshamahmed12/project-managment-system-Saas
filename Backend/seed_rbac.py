@@ -47,35 +47,32 @@ ROLE_PERMISSIONS = {
             "role:delete",
         }
     ],
+"manager": [
+    "project:create",
+    "project:read",
+    "project:update",
 
-    "manager": [
-        "project:create",
-        "project:read",
-        "project:update",
+    "task:create",
+    "task:read",
+    "task:update",
 
-        "task:create",
-        "task:read",
-        "task:update",
-        "task:delete",
+    "sprint:create",
+    "sprint:read",
+    "sprint:update",
+],
 
-        "sprint:create",
-        "sprint:read",
-        "sprint:update",
-    ],
-
-    "member": [
-        "project:create",
-        "project:read",
-        "project:update",
-        "task:create",
-        "task:read",
-        "task:update",
-        "task:delete",
-        "sprint:create",
-        "sprint:read",
-        "sprint:update",
-        "user:read",
-    ],
+"member": [
+    "project:create",
+    "project:read",
+    "project:update",
+    "task:create",
+    "task:read",
+    "task:update",
+    "sprint:create",
+    "sprint:read",
+    "sprint:update",
+    "user:read",
+],
 
     "viewer": [
         "project:read",

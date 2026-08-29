@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -277,6 +277,8 @@ async def delete_sprint(
     db: AsyncSession = Depends(get_db),
 ):
     sprint = await get_sprint_or_404(db, sprint_id)
+    # Nullify sprint_id for tasks linked to this sprint
+    await db.execute(update(Task).where(Task.sprint_id == sprint_id).values(sprint_id=None))
     await db.delete(sprint)
     await db.commit()
     return {"message": "Sprint deleted successfully"}
