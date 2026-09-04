@@ -20,5 +20,8 @@ dependencies = [
     "uvicorn[standard]>=0.52.1"
 ]
 
+# The Vercel service root is `Backend/` (see vercel.json), so the module path is
+# relative to this directory. `main.py` uses flat imports (`from database import ...`)
+# and there is no `Backend/__init__.py`, so `Backend.main:app` would fail to import.
 [tool.vercel]
-entrypoint = "Backend.main:app"
+entrypoint = "main:app"

@@ -1,4 +1,12 @@
-const API_URL = import.meta.env.VITE_API_URL as string;
+// Matches the fallback chain used by the other API clients. Without the
+// fallback this resolved to the string "undefined" whenever only
+// VITE_API_BASE_URL was set, producing requests to "undefined/search/".
+const API_URL = (
+  import.meta.env.VITE_API_URL ??
+  import.meta.env.VITE_API_BASE_URL ??
+  "/api"
+).replace(/\/$/, "");
+
 const TOKEN_KEY = "auth_token";
 
 export interface SearchUser {

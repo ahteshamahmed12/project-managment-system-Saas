@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from config import settings
 from database import init_db
 
 from routers.auth import router as auth_router
@@ -25,7 +26,10 @@ from app.websocket.routes import router as websocket_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
+    # On serverless every cold start would otherwise issue CREATE TABLE DDL.
+    # Keep it on for local dev; use Alembic migrations in deployed environments.
+    if settings.run_create_all_on_startup:
+        await init_db()
     yield
 
 
@@ -38,14 +42,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5174",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=settings.cors_origins,
+    allow_origin_regex=settings.cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
